@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          lfs: false
+          lfs: true
 
       # Cache
       - uses: actions/cache@v3
