@@ -22,11 +22,13 @@ namespace Expo.Core.Progression
         {
             if (_cachedConfig != null)
                 return _cachedConfig;
-                
-            string configPath = Path.Combine(Application.dataPath, "Data", "progression_config.json");
             
             try
             {
+                #if UNITY_EDITOR
+                // In editor, load from file system
+                string configPath = Path.Combine(Application.dataPath, "Data", "progression_config.json");
+                
                 if (File.Exists(configPath))
                 {
                     string jsonContent = File.ReadAllText(configPath);
@@ -38,6 +40,22 @@ namespace Expo.Core.Progression
                     DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, $"Progression config not found at {configPath}, creating default");
                     _cachedConfig = CreateDefaultProgressionConfig();
                 }
+                #else
+                // In build, load from Resources folder
+                TextAsset configAsset = Resources.Load<TextAsset>("Data/progression_config");
+                
+                if (configAsset != null)
+                {
+                    string jsonContent = configAsset.text;
+                    _cachedConfig = JsonUtility.FromJson<ProgressionConfig>(jsonContent);
+                    DebugLogger.Log(DebugLogger.Category.PROGRESSION, $"Loaded progression config from Resources with {_cachedConfig.levels.Count} levels");
+                }
+                else
+                {
+                    DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "Progression config not found in Resources/Data/, creating default");
+                    _cachedConfig = CreateDefaultProgressionConfig();
+                }
+                #endif
             }
             catch (System.Exception e)
             {
