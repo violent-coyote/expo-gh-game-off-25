@@ -1,0 +1,54 @@
+# ====== #
+# Custom #
+# ====== #
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+!Packages-Update.log
+[Aa]ssets/AddressableAssetsData/link.xml
+[Aa]ssets/AddressableAssetsData/link.xml.meta
+
+# =============== #
+# Unity generated #
+# =============== #
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Uu]ser[Ss]ettings/
+
+# Never commit these
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# ===================================== #
+# Visual Studio / MonoDevelop generated #
+# ===================================== #
+.vscode/
+[Ee]xported[Oo]bj/
+.vs/
+.consulo/
+
+# ============ #
+# OS generated #
+# ============ #
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+[Tt]humbs.db
+[Dd]esktop.ini

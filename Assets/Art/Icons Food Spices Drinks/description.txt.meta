@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: f62815f55dd69674993813a8ee9c5919
+timeCreated: 1533491502
+licenseType: Store
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 125120
+  packageName: 'Icons: Food, Spices, Drinks'
+  packageVersion: 1.1.1
+  assetPath: Assets/Icons Food Spices Drinks/description.txt
+  uploadId: 804426
