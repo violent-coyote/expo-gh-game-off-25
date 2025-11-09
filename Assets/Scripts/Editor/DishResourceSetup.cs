@@ -6,7 +6,8 @@ using Expo.Data;
 namespace Expo.Editor
 {
     /// <summary>
-    /// Editor utility to set up dish assets in Resources folder for runtime loading
+    /// Editor utility to set up dish assets in Resources folder for runtime loading.
+    /// Required for WebGL and other platform builds to access dishes at runtime.
     /// </summary>
     public static class DishResourceSetup
     {
@@ -47,8 +48,26 @@ namespace Expo.Editor
                 }
             }
             
+            // Also copy the progression config
+            string configSource = "Assets/Data/progression_config.json";
+            string configTarget = "Assets/Resources/Data/progression_config.json";
+            
+            if (File.Exists(configSource))
+            {
+                Directory.CreateDirectory("Assets/Resources/Data");
+                if (AssetDatabase.CopyAsset(configSource, configTarget))
+                {
+                    Debug.Log("Copied progression_config.json to Resources folder");
+                }
+                else
+                {
+                    Debug.LogError("Failed to copy progression_config.json");
+                }
+            }
+            
             AssetDatabase.Refresh();
-            Debug.Log($"Setup complete! Copied {copiedCount} dish assets to Resources folder.");
+            Debug.Log($"Setup complete! Copied {copiedCount} dish assets and progression config to Resources folder.");
+            Debug.Log("✅ WebGL builds will now load dishes and config correctly.");
         }
         
         [MenuItem("Expo/Update Progression Config")]

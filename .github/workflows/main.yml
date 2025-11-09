@@ -46,3 +46,25 @@ jobs:
         with:
           name: Build
           path: build
+
+      # Upload to itch.io
+  deploy_web:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: Build
+          path: ./
+      - name: Zip WebGL build contents
+        run: cd WebGL && zip -r ../Web.zip .
+      - name: Deploy - Itch.io - web
+        uses: KikimoraGames/itch-publish@v0.0.3
+        with:
+            butlerApiKey: ${{ secrets.BUTLER_CREDENTIALS }}
+            gameData: ./Web.zip
+            itchUsername: floweraco
+            itchGameId: expo
+            buildChannel: web
+            buildNumber: ${{ github.run_number }}
