@@ -39,19 +39,19 @@ namespace Expo.UI
 
         // How to play content
         private const string HOW_TO_PLAY_CONTENT =
-            "<size=24><b>How to Play - Kitchen Expediter</b></size>\n\n" +
-            "<b>Your Role:</b> You are the Expediter (Expo) - the coordinator who ensures dishes get to the right tables.\n\n" +
-            "<color=yellow><b>STEP 1: FIRE DISHES</b></color>\n" +
+            "<size=24><b>How to Play - EXPO</b></size>\n\n" +
+            "You are EXPO who runs this shit.\n\n" +
+            "Don't serve cold food. Send food out on time. Don't fuck it up.\n\n" +
+            "<color=yellow><b>FIRE DISHES</b></color>\n" +
             "• Tickets appear showing what each table ordered\n" +
-            "• Click 'FIRE' buttons to send dishes to cooking stations\n" +
+            "• Click buttons to send dishes to cook\n" +
             "• Each dish has a pickup time (how long it takes to cook)\n\n" +
-            "<color=green><b>STEP 2: MARK WALKING</b></color>\n" +
-            "• Cooked dishes appear on the pass (service window)\n" +
-            "• Click 'HANDS' when a dish is ready to serve\n" +
+            "<color=green><b>RECEIVE DISHES</b></color>\n" +
+            "• Cooked dishes appear on the pass\n" +
+            "• Click the dish when a dish is ready to serve\n" +
             "• Be quick - dishes die if left too long on the pass!\n\n" +
-            "<color=blue><b>STEP 3: SERVE TABLES</b></color>\n" +
-            "• The table menu is always visible on screen\n" +
-            "• Click any available table to send walking dishes to it\n" +
+            "<color=blue><b>SEND DISHES</b></color>\n" +
+            "• Click any available table to send selected dishes to it\n" +
             "• Complete all courses for each table to finish tickets\n\n" +
             "<b>Speed Controls:</b>\n" +
             "• Press '1' , '2', '3' for faster speeds\n" +
@@ -59,7 +59,8 @@ namespace Expo.UI
             "Dishes should be sent together, per course\n"+
             "• Watch the timers - dishes die if left too long\n" +
             "• Recall pickup times - fire dishes strategically for each course\n" +
-            "• Keep an eye on multiple tables and their timing\n";
+            "• Keep an eye on multiple tables and their timing\n"+
+            "• Keep your cool. The worst thing that can happen is you ruin someone's life.\n";
         
         private void Start()
         {

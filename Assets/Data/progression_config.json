@@ -6,7 +6,9 @@
       "description": "Welcome to the kitchen! Start with basic dishes.",
       "xpRequired": 0,
       "unlockedDishes": [
-        "Gem"
+        "Gem",
+        "Leeks",
+        "Steak"
       ],
       "unlockedFeatures": [
         "basic_tutorial"
@@ -20,7 +22,6 @@
       "description": "You're getting the hang of it. Time for more variety.",
       "xpRequired": 100,
       "unlockedDishes": [
-        "Leeks"
       ],
       "unlockedFeatures": [
         "speed_controls"
@@ -34,7 +35,6 @@
       "description": "Ready for the grill? Handle the heat!",
       "xpRequired": 250,
       "unlockedDishes": [
-        "Steak"
       ],
       "unlockedFeatures": [
         "advanced_timing",
@@ -50,8 +50,6 @@
       "xpRequired": 500,
       "unlockedDishes": [],
       "unlockedFeatures": [
-        "all_dishes_unlocked",
-        "advanced_scoring"
       ],
       "rewardTitle": "Kitchen Master",
       "rewardDescription": "Congratulations! You've mastered all available dishes and earned the Sous Chef title."
@@ -63,7 +61,6 @@
       "xpRequired": 1000,
       "unlockedDishes": [],
       "unlockedFeatures": [
-        "master_chef"
       ],
       "rewardTitle": "Head Chef",
       "rewardDescription": "The kitchen is yours to command. Maximum level reached!"

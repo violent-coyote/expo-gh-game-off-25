@@ -243,12 +243,25 @@ namespace Expo.UI
             GameObject buttonObj = new GameObject($"Table{table.TableNumber}Button");
             buttonObj.transform.SetParent(buttonContainer, false);
 
-            // Add Button component
-            Button button = buttonObj.AddComponent<Button>();
-            
             // Add Image component for button background
             Image buttonImage = buttonObj.AddComponent<Image>();
             buttonImage.color = Color.white;
+            
+            // Add Button component and configure visual feedback
+            Button button = buttonObj.AddComponent<Button>();
+            button.targetGraphic = buttonImage;
+            button.transition = Selectable.Transition.ColorTint;
+            
+            // Configure color transitions for visual feedback
+            ColorBlock colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f); // Light gray on hover
+            colors.pressedColor = new Color(0.7f, 0.7f, 0.7f); // Darker gray on press
+            colors.selectedColor = new Color(0.8f, 0.8f, 0.8f);
+            colors.disabledColor = new Color(0.5f, 0.5f, 0.5f);
+            colors.colorMultiplier = 1f;
+            colors.fadeDuration = 0.1f;
+            button.colors = colors;
 
             // Create text child
             GameObject textObj = new GameObject("Text");
