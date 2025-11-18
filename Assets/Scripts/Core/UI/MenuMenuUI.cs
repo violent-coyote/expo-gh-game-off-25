@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,20 +30,59 @@ namespace Expo.UI
         private readonly List<DishState> _standaloneDishes = new(); // Track standalone dishes for cleanup
         private int _standaloneDishCounter = 0;
 
-        private void Awake()
+        private void Start()
         {
-            // Start with menu hidden
+            // Menu is always visible - ensure panel is active
             if (menuPanel != null)
             {
-                menuPanel.SetActive(false);
+                menuPanel.SetActive(true);
             }
+
+            // Delay population to ensure TicketManager has finished initialization
+            StartCoroutine(PopulateMenuDelayed());
         }
 
         /// <summary>
-        /// Toggles the menu visibility. Shows menu if hidden, hides menu if shown.
-        /// Called by UI button click event.
+        /// Delays menu population to ensure TicketManager has loaded and filtered dishes.
         /// </summary>
-        public void ShowMenu()
+        private IEnumerator PopulateMenuDelayed()
+        {
+            if (ticketManager == null)
+            {
+                DebugLogger.LogError(DebugLogger.Category.UI, "TicketManager reference is missing!");
+                yield break;
+            }
+
+            // Wait one frame to ensure all managers have initialized
+            yield return null;
+
+            // Try to populate, retry if no dishes available yet
+            int retryCount = 0;
+            const int maxRetries = 10;
+            
+            while (retryCount < maxRetries)
+            {
+                var availableDishes = ticketManager.GetAvailableDishes();
+                
+                if (availableDishes != null && availableDishes.Count > 0)
+                {
+                    PopulateMenu();
+                    yield break;
+                }
+                
+                // Wait a bit and retry
+                retryCount++;
+                DebugLogger.Log(DebugLogger.Category.UI, $"MenuMenu: Waiting for dishes to load (attempt {retryCount}/{maxRetries})...");
+                yield return new WaitForSeconds(0.1f);
+            }
+            
+            DebugLogger.LogWarning(DebugLogger.Category.UI, "MenuMenu: Failed to load dishes after multiple attempts!");
+        }
+
+        /// <summary>
+        /// Populates the menu with available dishes from TicketManager.
+        /// </summary>
+        private void PopulateMenu()
         {
             if (ticketManager == null)
             {
@@ -50,17 +90,6 @@ namespace Expo.UI
                 return;
             }
 
-            // Check if menu is currently active
-            bool isMenuVisible = menuPanel != null && menuPanel.activeInHierarchy;
-            
-            if (isMenuVisible)
-            {
-                // Menu is visible, hide it
-                HideMenu();
-                return;
-            }
-
-            // Menu is hidden, show it
             // Clear existing buttons
             ClearButtons();
             
@@ -78,29 +107,8 @@ namespace Expo.UI
             {
                 CreateDishButton(dishData);
             }
-
-            // Show the menu
-            if (menuPanel != null)
-            {
-                menuPanel.SetActive(true);
-            }
             
-            DebugLogger.Log(DebugLogger.Category.UI, $"MenuMenu showing {availableDishes.Count} available dishes");
-        }
-
-        /// <summary>
-        /// Hides the menu.
-        /// </summary>
-        public void HideMenu()
-        {
-            if (menuPanel != null)
-            {
-                menuPanel.SetActive(false);
-            }
-            
-            ClearButtons();
-            
-            DebugLogger.Log(DebugLogger.Category.UI, "MenuMenu hidden");
+            DebugLogger.Log(DebugLogger.Category.UI, $"MenuMenu populated with {availableDishes.Count} available dishes");
         }
 
         /// <summary>
@@ -175,8 +183,6 @@ namespace Expo.UI
             });
             
             DebugLogger.Log(DebugLogger.Category.UI, $"MenuMenu: Published DishFiredEvent for {dishData.dishName} (ID: {dishInstanceId})");
-            
-            // Keep menu open (unlike TableSelectionUI which closes after selection)
         }
 
         /// <summary>

@@ -28,7 +28,6 @@ namespace Expo.UI
 
         private readonly Dictionary<int, GameObject> _dishRows = new(); // instanceId -> row GameObject
         private readonly Dictionary<int, TextMeshProUGUI> _dishTexts = new(); // instanceId -> text component
-        private readonly Dictionary<int, Button> _dishButtons = new(); // instanceId -> button component
 
         public void Init(TicketData data, Expo.Managers.TableManager tableManager)
         {
@@ -112,7 +111,6 @@ namespace Expo.UI
             
             _dishRows.Clear();
             _dishTexts.Clear();
-            _dishButtons.Clear();
             
             if (_tableManager == null)
             {
@@ -180,21 +178,24 @@ namespace Expo.UI
 
             var btn = row.GetComponentInChildren<Button>();
             
-            // Find the DishState from the original ticket to wire up fire button
+            // REMOVED: Individual dish firing functionality
+            // Players can only use "Fire the Board" to fire all available dishes at once
+            // Individual fire buttons are now hidden
+            if (btn != null)
+            {
+                btn.gameObject.SetActive(false);
+            }
+            
+            // Find the DishState from the original ticket for tracking purposes
             DishState dishState = FindDishStateByInstanceId(expectation.DishInstanceId);
             
-            if (dishState != null && dishState.Status == DishStatus.NotFired)
+            // Update visual appearance for locked courses
+            if (dishState != null)
             {
-                // This is a dish from our original ticket - can be fired
-                btn.onClick.AddListener(() => FireDish(dishState, btn));
-                
-                // REFACTORED: Check if course is unlocked via TABLE state, not CourseData!
-                // Get the table to check its current course
                 var table = _ticketData.AssignedTable;
                 if (table != null)
                 {
                     bool isCourseUnlocked = table.IsCourseUnlocked(expectation.CourseNumber);
-                    btn.interactable = isCourseUnlocked && !expectation.IsServed;
                     
                     if (!isCourseUnlocked)
                     {
@@ -203,15 +204,9 @@ namespace Expo.UI
                     }
                 }
             }
-            else
-            {
-                // This dish is from another ticket or already fired - can't fire it
-                btn.gameObject.SetActive(false);
-            }
             
             _dishRows[expectation.DishInstanceId] = row;
             _dishTexts[expectation.DishInstanceId] = text;
-            _dishButtons[expectation.DishInstanceId] = btn;
 
             DebugLogger.Log(DebugLogger.Category.TICKET_UI,
                 $"Table {_tableNumber}: Added '{expectation.DishType.dishName}' (instance {expectation.DishInstanceId}, served: {expectation.IsServed})");
@@ -356,12 +351,6 @@ namespace Expo.UI
                         text.fontStyle = FontStyles.Strikethrough;
                         text.color = Color.gray;
                         markedCount++;
-                        
-                        // Disable the fire button if it exists
-                        if (_dishButtons.TryGetValue(dishInstanceId, out var btn))
-                        {
-                            btn.interactable = false;
-                        }
 
                         DebugLogger.Log(DebugLogger.Category.TICKET_UI,
                             $"✓ [Table {_tableNumber}] Struck through expectation {dishInstanceId} ({expectation.DishType.dishName})");
@@ -371,29 +360,6 @@ namespace Expo.UI
             
             DebugLogger.Log(DebugLogger.Category.TICKET_UI,
                 $"[Table {_tableNumber}] Strikethrough complete: {markedCount} dishes newly marked");
-        }
-
-        private void FireDish(DishState dish, Button btn)
-        {
-            DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
-                $"[Ticket #{_ticketData?.TicketId ?? -1}] 🔥 FIRING dish {dish.DishInstanceId} ({dish.Data.dishName}) - Status: {dish.Status}");
-            
-            EventBus.Publish(new DishFiredEvent
-            {
-                DishData = dish.Data,
-                DishState = dish,
-                Station = dish.Data.station,
-                DishInstanceId = dish.DishInstanceId,
-                Timestamp = GameTime.Time,
-                ExpectedReadyTime = GameTime.Time + dish.Data.pickupTime
-            });
-
-            // Hide the button after firing
-            btn.interactable = false;
-            btn.gameObject.SetActive(false);
-            
-            DebugLogger.Log(DebugLogger.Category.TICKET_UI,
-                $"[Ticket #{_ticketData?.TicketId ?? -1}] Fire button disabled for dish {dish.DishInstanceId}");
         }
 
         /// <summary>
@@ -438,13 +404,6 @@ namespace Expo.UI
                             Timestamp = GameTime.Time,
                             ExpectedReadyTime = GameTime.Time + dish.Data.pickupTime
                         });
-
-                        // Hide the fire button for this dish
-                        if (_dishButtons.TryGetValue(dish.DishInstanceId, out var btn))
-                        {
-                            btn.interactable = false;
-                            btn.gameObject.SetActive(false);
-                        }
                         
                         firedCount++;
                     }
