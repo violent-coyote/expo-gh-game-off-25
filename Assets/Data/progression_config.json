@@ -13,6 +13,12 @@
       "unlockedFeatures": [
         "basic_tutorial"
       ],
+      "gradingThresholds": {
+        "maxMistakesForA": 0,
+        "maxMistakesForB": 5,
+        "maxMistakesForC": 8,
+        "maxMistakesForD": 20
+      },
       "rewardTitle": "First Steps",
       "rewardDescription": "You've unlocked your first dish! Gem Salad is a simple garde manger dish perfect for learning the basics."
     },

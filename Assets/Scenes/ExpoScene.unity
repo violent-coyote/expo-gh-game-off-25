@@ -656,13 +656,14 @@ GameObject:
   - component: {fileID: 170250617}
   - component: {fileID: 170250619}
   - component: {fileID: 170250618}
+  - component: {fileID: 170250620}
   m_Layer: 5
   m_Name: EndOfShiftReport
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &170250617
 RectTransform:
   m_ObjectHideFlags: 0
@@ -681,7 +682,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 500, y: 866}
+  m_SizeDelta: {x: 900, y: 866}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &170250618
 MonoBehaviour:
@@ -696,7 +697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -721,6 +722,25 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 170250616}
   m_CullTransparentMesh: 1
+--- !u!114 &170250620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 170250616}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b77b7cf067d845ba9fe4262b9805614, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Expo.UI.EndOfShiftReportUI
+  reportText: {fileID: 1665149654}
+  shiftTimerManager: {fileID: 0}
+  useRichText: 1
+  fontSize: 32
+  headerFontSize: 48
+  minFontSize: 12
+  maxFontSize: 36
 --- !u!1 &190058853
 GameObject:
   m_ObjectHideFlags: 0
@@ -1991,6 +2011,7 @@ MonoBehaviour:
   togetherThreshold: 2
   tableManager: {fileID: 1285406895}
   shiftTimerManager: {fileID: 1285406896}
+  endOfShiftReportUI: {fileID: 170250620}
 --- !u!114 &1285406895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2021,7 +2042,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64e33cb75f0e7472f8a9dace25255b00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Expo.Managers.ShiftTimerManager
-  shiftStartHour: 17
+  shiftStartHour: 18
   ticketCutoffHour: 21
   realMinutesPerSimHour: 1
   tableManager: {fileID: 1285406895}
@@ -2465,7 +2486,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -39.999985, y: -40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1665149654
 MonoBehaviour:

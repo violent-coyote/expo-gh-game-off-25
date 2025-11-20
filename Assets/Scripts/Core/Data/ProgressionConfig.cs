@@ -14,6 +14,9 @@ namespace Expo.Data
         [Header("Progression Configuration")]
         public List<ProgressionLevel> levels = new List<ProgressionLevel>();
         
+        [Header("Grading Thresholds")]
+        public GradingThresholds gradingThresholds = new GradingThresholds();
+        
         /// <summary>
         /// Get all dishes that should be unlocked at or below the specified level
         /// </summary>
@@ -77,5 +80,55 @@ namespace Expo.Data
         [Header("Rewards")]
         public string rewardTitle;
         public string rewardDescription;
+    }
+    
+    /// <summary>
+    /// Defines mistake count thresholds for letter grades.
+    /// Grades are calculated as: A (0-maxMistakesForA), B, C, D, F (anything over maxMistakesForD)
+    /// </summary>
+    [Serializable]
+    public class GradingThresholds
+    {
+        [Tooltip("Maximum mistakes allowed for an A grade")]
+        public int maxMistakesForA = 0;
+        
+        [Tooltip("Maximum mistakes allowed for a B grade")]
+        public int maxMistakesForB = 2;
+        
+        [Tooltip("Maximum mistakes allowed for a C grade")]
+        public int maxMistakesForC = 5;
+        
+        [Tooltip("Maximum mistakes allowed for a D grade")]
+        public int maxMistakesForD = 8;
+        
+        // Anything over maxMistakesForD is an F
+        
+        /// <summary>
+        /// Calculate letter grade based on mistake count
+        /// </summary>
+        public string CalculateGrade(int mistakeCount)
+        {
+            if (mistakeCount <= maxMistakesForA) return "A";
+            if (mistakeCount <= maxMistakesForB) return "B";
+            if (mistakeCount <= maxMistakesForC) return "C";
+            if (mistakeCount <= maxMistakesForD) return "D";
+            return "F";
+        }
+        
+        /// <summary>
+        /// Get color for grade (for UI display)
+        /// </summary>
+        public Color GetGradeColor(string grade)
+        {
+            switch (grade)
+            {
+                case "A": return new Color(0.2f, 0.8f, 0.2f); // Green
+                case "B": return new Color(0.4f, 0.7f, 0.3f); // Light green
+                case "C": return new Color(0.9f, 0.9f, 0.2f); // Yellow
+                case "D": return new Color(0.9f, 0.5f, 0.2f); // Orange
+                case "F": return new Color(0.9f, 0.2f, 0.2f); // Red
+                default: return Color.white;
+            }
+        }
     }
 }

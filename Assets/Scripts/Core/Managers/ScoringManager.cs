@@ -29,6 +29,7 @@ namespace Expo.Managers
         [Header("References")]
         [SerializeField] private TableManager tableManager;
         [SerializeField] private ShiftTimerManager shiftTimerManager;
+        [SerializeField] private Expo.UI.EndOfShiftReportUI endOfShiftReportUI;
 
         // Track all mistakes made during the shift
         private readonly List<Mistake> _mistakesThisShift = new();
@@ -117,6 +118,17 @@ namespace Expo.Managers
                 ShiftDuration = e.ShiftDuration,
                 Timestamp = e.Timestamp
             });
+            
+            // Display the UI report
+            if (endOfShiftReportUI != null)
+            {
+                endOfShiftReportUI.DisplayReport(_mistakesThisShift, e.TotalTicketsServed, e.ShiftDuration);
+            }
+            else
+            {
+                DebugLogger.LogWarning(DebugLogger.Category.MISTAKE, 
+                    "EndOfShiftReportUI reference is missing! Cannot display report.");
+            }
         }
 
         /// <summary>
