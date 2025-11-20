@@ -1893,6 +1893,7 @@ GameObject:
   - component: {fileID: 1285406894}
   - component: {fileID: 1285406895}
   - component: {fileID: 1285406896}
+  - component: {fileID: 1285406897}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -2047,6 +2048,21 @@ MonoBehaviour:
   realMinutesPerSimHour: 1
   tableManager: {fileID: 1285406895}
   ticketManager: {fileID: 1285406890}
+--- !u!114 &1285406897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1285406888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49c7beb2767364550b6ba98d20aa96c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Expo.GameFeel.GameFeelManager
+  config: {fileID: 11400000, guid: e542e762a5302427ab74be20cfbea326, type: 2}
+  targetCamera: {fileID: 330585545}
+  showDebugLogs: 0
 --- !u!1 &1298809879
 GameObject:
   m_ObjectHideFlags: 0

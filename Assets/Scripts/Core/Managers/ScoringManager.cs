@@ -6,6 +6,7 @@ using Expo.Core.Debug;
 using Expo.Data;
 using Expo.Runtime;
 using Expo.Core.Events;
+using Expo.GameFeel;
 
 namespace Expo.Managers
 {
@@ -103,6 +104,9 @@ namespace Expo.Managers
             
             DebugLogger.Log(DebugLogger.Category.MISTAKE, 
                 $"❌ MISTAKE: {mistake.Description}");
+            
+            // Trigger game feel feedback
+            PublishGameFeelEvent(mistake);
         }
         
         private void OnAllTablesServed(AllTablesServedEvent e)
@@ -191,6 +195,9 @@ namespace Expo.Managers
                             
                             DebugLogger.Log(DebugLogger.Category.MISTAKE, 
                                 $"❌ MISTAKE: {mistake.Description}");
+                            
+                            // Trigger game feel feedback
+                            PublishGameFeelEvent(mistake);
                         }
                         break;
                     }
@@ -228,6 +235,9 @@ namespace Expo.Managers
                     
                     DebugLogger.Log(DebugLogger.Category.MISTAKE, 
                         $"❌ MISTAKE: {mistake.Description}");
+                    
+                    // Trigger game feel feedback
+                    PublishGameFeelEvent(mistake);
                 }
             }
         }
@@ -373,6 +383,9 @@ namespace Expo.Managers
                 
                 DebugLogger.Log(DebugLogger.Category.MISTAKE, 
                     $"❌ MISTAKE: Staggered course - {mistake.Description}");
+                
+                // Trigger game feel feedback
+                PublishGameFeelEvent(mistake);
             }
         }
         
@@ -433,6 +446,19 @@ namespace Expo.Managers
         public int GetMistakeCountByType(MistakeType type)
         {
             return _mistakesThisShift.Count(m => m.Type == type);
+        }
+
+        /// <summary>
+        /// Publishes a GameFeelEvent to trigger visual/audio feedback for mistakes.
+        /// </summary>
+        private void PublishGameFeelEvent(Mistake mistake)
+        {
+            EventBus.Publish(new GameFeelEvent
+            {
+                EventType = GameFeelEventType.Mistake,
+                Timestamp = mistake.Timestamp,
+                Context = mistake
+            });
         }
     }
 }
