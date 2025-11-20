@@ -160,35 +160,19 @@ namespace Expo.Managers
             // Check each served dish
             foreach (var dishData in e.ServedDishTypes)
             {
-                // Check if this dish type is expected on this table
-                bool hasExpectation = orderState.HasDishType(dishData.dishName);
+                // FIRST: Check if dish was sent before its course was unlocked (premature)
+                // We must check this BEFORE checking HasDishType, because HasDishType
+                // only returns unserved dishes, but by the time this event handler runs,
+                // TableManager may have already marked the dish as served.
+                bool foundInTicket = false;
                 
-                if (!hasExpectation)
-                {
-                    // Wrong table - dish not expected here at all
-                    var mistake = new Mistake
-                    {
-                        Type = MistakeType.WrongTable,
-                        DishData = dishData,
-                        TableNumber = tableNumber,
-                        Timestamp = e.Timestamp,
-                        Description = $"{dishData.dishName} wasn't expected on Table {tableNumber}"
-                    };
-                    
-                    _mistakesThisShift.Add(mistake);
-                    
-                    DebugLogger.Log(DebugLogger.Category.MISTAKE, 
-                        $"❌ MISTAKE: {mistake.Description}");
-                    continue;
-                }
-                
-                // Check if dish was sent before its course was unlocked (premature)
-                // Find which course this dish belongs to
                 foreach (var course in ticket.Courses)
                 {
                     var matchingDish = course.Dishes.FirstOrDefault(d => d.Data.dishName == dishData.dishName);
                     if (matchingDish != null)
                     {
+                        foundInTicket = true;
+                        
                         if (!course.IsUnlocked)
                         {
                             // Premature dish - sent before course was unlocked
@@ -210,6 +194,40 @@ namespace Expo.Managers
                         }
                         break;
                     }
+                }
+                
+                // SECOND: Check if this dish type exists in the table's order at all
+                // We need to check across ALL expectations (served and unserved) to detect wrong table
+                bool hasExpectationAnywhere = false;
+                foreach (var courseOrder in orderState.Courses)
+                {
+                    foreach (var expectation in courseOrder.Dishes)
+                    {
+                        if (expectation.DishType.dishName == dishData.dishName)
+                        {
+                            hasExpectationAnywhere = true;
+                            break;
+                        }
+                    }
+                    if (hasExpectationAnywhere) break;
+                }
+                
+                if (!hasExpectationAnywhere && !foundInTicket)
+                {
+                    // Wrong table - dish not expected on this table at all
+                    var mistake = new Mistake
+                    {
+                        Type = MistakeType.WrongTable,
+                        DishData = dishData,
+                        TableNumber = tableNumber,
+                        Timestamp = e.Timestamp,
+                        Description = $"{dishData.dishName} wasn't expected on Table {tableNumber}"
+                    };
+                    
+                    _mistakesThisShift.Add(mistake);
+                    
+                    DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                        $"❌ MISTAKE: {mistake.Description}");
                 }
             }
         }
