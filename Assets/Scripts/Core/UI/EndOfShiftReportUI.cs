@@ -141,7 +141,6 @@ namespace Expo.UI
                 var staggeredCourses = mistakes.FindAll(m => m.Type == MistakeType.StaggeredCourse);
                 var deadDishes = mistakes.FindAll(m => m.Type == MistakeType.DeadDish);
                 var wrongTableDishes = mistakes.FindAll(m => m.Type == MistakeType.WrongTable);
-                var prematureDishes = mistakes.FindAll(m => m.Type == MistakeType.PrematureDish);
                 
                 // Staggered courses
                 if (staggeredCourses.Count > 0)
@@ -182,21 +181,6 @@ namespace Expo.UI
                         report.AppendLine("Wrong Table:");
                     
                     foreach (var mistake in wrongTableDishes)
-                    {
-                        report.AppendLine($"  • {mistake.Description}");
-                    }
-                    report.AppendLine();
-                }
-                
-                // Premature dishes
-                if (prematureDishes.Count > 0)
-                {
-                    if (useRichText)
-                        report.AppendLine("<b>Premature Dishes:</b>");
-                    else
-                        report.AppendLine("Premature Dishes:");
-                    
-                    foreach (var mistake in prematureDishes)
                     {
                         report.AppendLine($"  • {mistake.Description}");
                     }

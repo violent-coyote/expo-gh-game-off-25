@@ -7,6 +7,7 @@ using Expo.Core.Debug;
 using Expo.Data;
 using Expo.UI;
 using Expo.Managers;
+using UnityEngine.SceneManagement;
 
 namespace Expo.Controllers
 {
@@ -146,6 +147,13 @@ namespace Expo.Controllers
             DebugLogger.Log(DebugLogger.Category.EXPO, 
                 $"✅ HANDS complete! Served {_walkingDishes.Count} dishes to table {tableNumber}. Clearing walking dishes.");
             _walkingDishes.Clear();
+        }
+    
+
+        // Public function to return to PreShiftUI Scene
+        public void ReturnToPreShiftUI()
+        {
+            SceneManager.LoadScene("PreShiftUI");
         }
     }
 }

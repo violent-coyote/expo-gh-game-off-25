@@ -8,10 +8,9 @@ namespace Expo.Core.Events
     /// </summary>
     public enum MistakeType
     {
-        StaggeredCourse,  // Course dishes sent at different times
+        StaggeredCourse,  // Course dishes sent at different times (not in same send)
         DeadDish,         // Dish died on pass
-        WrongTable,       // Dish sent to table with no expectation for it
-        PrematureDish     // Dish sent to correct table but course not unlocked yet
+        WrongTable        // Dish sent to table with no expectation for it
     }
 
     /// <summary>

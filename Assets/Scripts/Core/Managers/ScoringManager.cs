@@ -136,7 +136,7 @@ namespace Expo.Managers
         }
 
         /// <summary>
-        /// Checks if dishes were sent to the wrong table or sent prematurely (before course unlocked).
+        /// Checks if dishes were sent to the wrong table.
         /// </summary>
         private void CheckForWrongTableMistakes(DishesServedEvent e)
         {
@@ -150,60 +150,10 @@ namespace Expo.Managers
                 return;
             }
             
-            // Get the ticket for this table to check course unlock status
-            var ticket = _activeTickets.Values.FirstOrDefault(t => 
-                t.AssignedTable != null && t.AssignedTable.TableNumber == tableNumber);
-            
-            if (ticket == null)
-            {
-                DebugLogger.LogWarning(DebugLogger.Category.MISTAKE, 
-                    $"No ticket found for table {tableNumber}");
-                return;
-            }
-            
-            // Check each served dish
+            // Check each served dish for wrong table mistakes
             foreach (var dishData in e.ServedDishTypes)
             {
-                // FIRST: Check if dish was sent before its course was unlocked (premature)
-                // We must check this BEFORE checking HasDishType, because HasDishType
-                // only returns unserved dishes, but by the time this event handler runs,
-                // TableManager may have already marked the dish as served.
-                bool foundInTicket = false;
-                
-                foreach (var course in ticket.Courses)
-                {
-                    var matchingDish = course.Dishes.FirstOrDefault(d => d.Data.dishName == dishData.dishName);
-                    if (matchingDish != null)
-                    {
-                        foundInTicket = true;
-                        
-                        if (!course.IsUnlocked)
-                        {
-                            // Premature dish - sent before course was unlocked
-                            var mistake = new Mistake
-                            {
-                                Type = MistakeType.PrematureDish,
-                                TicketId = ticket.TicketId,
-                                CourseNumber = course.CourseNumber,
-                                DishData = dishData,
-                                TableNumber = tableNumber,
-                                Timestamp = e.Timestamp,
-                                Description = $"{dishData.dishName} sent to Table {tableNumber} before Course {course.CourseNumber} was unlocked (Ticket #{ticket.TicketId})"
-                            };
-                            
-                            _mistakesThisShift.Add(mistake);
-                            
-                            DebugLogger.Log(DebugLogger.Category.MISTAKE, 
-                                $"❌ MISTAKE: {mistake.Description}");
-                            
-                            // Trigger game feel feedback
-                            PublishGameFeelEvent(mistake);
-                        }
-                        break;
-                    }
-                }
-                
-                // SECOND: Check if this dish type exists in the table's order at all
+                // Check if this dish type exists in the table's order at all
                 // We need to check across ALL expectations (served and unserved) to detect wrong table
                 bool hasExpectationAnywhere = false;
                 foreach (var courseOrder in orderState.Courses)
@@ -219,7 +169,7 @@ namespace Expo.Managers
                     if (hasExpectationAnywhere) break;
                 }
                 
-                if (!hasExpectationAnywhere && !foundInTicket)
+                if (!hasExpectationAnywhere)
                 {
                     // Wrong table - dish not expected on this table at all
                     var mistake = new Mistake
@@ -289,7 +239,8 @@ namespace Expo.Managers
                             .ToList();
                         
                         float maxTime = serveTimes.Count > 0 ? serveTimes.Max() : GameTime.Time;
-                        bool allTogether = serveTimes.Count > 1 && (serveTimes.Max() - serveTimes.Min()) <= togetherThreshold;
+                        // No threshold - must be exact same time
+                        bool allTogether = serveTimes.Count > 1 && serveTimes.All(t => Mathf.Approximately(t, serveTimes[0]));
                         
                         EventBus.Publish(new CourseCompletedEvent
                         {
@@ -338,12 +289,12 @@ namespace Expo.Managers
 
             if (serveTimes.Count <= 1) return;
 
-            // Check if all dishes were served within the threshold window
-            float minTime = serveTimes.Min();
-            float maxTime = serveTimes.Max();
-            float timeSpread = maxTime - minTime;
+            // Check if all dishes were served at the EXACT same time (same send action)
+            // If there are any differences in serve time, it's a mistake
+            float firstTime = serveTimes[0];
+            bool allSameTime = serveTimes.All(t => Mathf.Approximately(t, firstTime));
             
-            if (timeSpread > togetherThreshold)
+            if (!allSameTime)
             {
                 // Staggered course - create mistake with detailed timing info
                 var staggeredDishes = new List<DishServeInfo>();
@@ -374,7 +325,7 @@ namespace Expo.Managers
                     TicketId = ticket.TicketId,
                     CourseNumber = course.CourseNumber,
                     TableNumber = ticket.AssignedTable.TableNumber,
-                    Timestamp = maxTime,
+                    Timestamp = serveTimes.Max(),
                     StaggeredDishes = staggeredDishes,
                     Description = $"Course {course.CourseNumber} on Ticket #{ticket.TicketId} (Table {ticket.AssignedTable.TableNumber}): {dishDetails}"
                 };
