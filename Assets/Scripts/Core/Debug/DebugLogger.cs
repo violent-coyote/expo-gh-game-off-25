@@ -27,6 +27,7 @@ namespace Expo.Core.Debug
             COURSE,
             STATION,
             SCORE,
+            MISTAKE,
             UI,
             PROGRESSION,
             TIME,

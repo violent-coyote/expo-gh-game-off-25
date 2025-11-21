@@ -6,61 +6,70 @@ using Expo.Core.Debug;
 using Expo.Data;
 using Expo.Runtime;
 using Expo.Core.Events;
+using Expo.GameFeel;
 
 namespace Expo.Managers
 {
     /// <summary>
-    /// Manages scoring for course-based service.
+    /// Tracks mistakes made during service.
     /// RESPONSIBILITIES:
-    /// - Tracks when dishes in a course are served
-    /// - Calculates scores based on course timing (dishes sent together vs. staggered)
-    /// - Publishes course completion and scoring events
+    /// - Tracks staggered course deliveries (dishes not sent together)
+    /// - Tracks dishes that die on the pass
+    /// - Tracks dishes sent to wrong tables (no expectation)
+    /// - Tracks premature dishes (sent before course is unlocked)
+    /// - Provides end-of-shift report data
     /// 
-    /// REFACTORED: Now works with TableOrderState instead of CourseData.Expectations
+    /// REFACTORED: Changed from scoring system to mistake tracking system
     /// </summary>
     public class ScoringManager : CoreManager
     {
-        [Header("Scoring Parameters")]
+        [Header("Mistake Tracking Parameters")]
         [Tooltip("Time window (seconds) within which dishes must be served to count as 'together'")]
         [SerializeField] private float togetherThreshold = 2f;
-        
-        [Tooltip("Score multiplier for perfect course timing (all dishes together)")]
-        [SerializeField] private float perfectCourseMultiplier = 2f;
-        
-        [Tooltip("Base score per dish")]
-        [SerializeField] private float baseScorePerDish = 10f;
 
         [Header("References")]
         [SerializeField] private TableManager tableManager;
+        [SerializeField] private ShiftTimerManager shiftTimerManager;
+        [SerializeField] private Expo.UI.EndOfShiftReportUI endOfShiftReportUI;
 
-        // Track when each dish was served
+        // Track all mistakes made during the shift
+        private readonly List<Mistake> _mistakesThisShift = new();
+        
+        // Track when each dish was served for course timing analysis
         private readonly Dictionary<int, float> _dishServedTimes = new();
         
         // Track active tickets and their courses
         private readonly Dictionary<int, TicketData> _activeTickets = new();
         
-        // Track which courses have been scored to avoid duplicates
-        private readonly HashSet<string> _scoredCourses = new(); // "ticketId_courseNumber"
+        // Track which courses have been checked to avoid duplicate mistake logging
+        private readonly HashSet<string> _checkedCourses = new(); // "ticketId_courseNumber"
 
         protected override void OnInitialize()
         {
             EventBus.Subscribe<DishesServedEvent>(OnDishesServed);
             EventBus.Subscribe<TicketCreatedEvent>(OnTicketCreated);
+            EventBus.Subscribe<DishDiedEvent>(OnDishDied);
+            EventBus.Subscribe<AllTablesServedEvent>(OnAllTablesServed);
+            
+            _mistakesThisShift.Clear();
         }
 
         protected override void OnShutdown()
         {
             EventBus.Unsubscribe<DishesServedEvent>(OnDishesServed);
             EventBus.Unsubscribe<TicketCreatedEvent>(OnTicketCreated);
+            EventBus.Unsubscribe<DishDiedEvent>(OnDishDied);
+            EventBus.Unsubscribe<AllTablesServedEvent>(OnAllTablesServed);
+            
             _dishServedTimes.Clear();
             _activeTickets.Clear();
-            _scoredCourses.Clear();
+            _checkedCourses.Clear();
+            _mistakesThisShift.Clear();
         }
 
         private void OnTicketCreated(TicketCreatedEvent e)
         {
-            // We'll need access to ticket data - this should be expanded to receive TicketData
-            // For now, we'll rely on other systems passing us the data
+            // Ticket data will be registered via RegisterTicket() method
         }
 
         private void OnDishesServed(DishesServedEvent e)
@@ -73,23 +82,119 @@ namespace Expo.Managers
                 _dishServedTimes[dishId] = currentTime;
             }
             
-            // Check each active ticket to see if any courses were completed
+            // Check for wrong table and premature dish mistakes
+            CheckForWrongTableMistakes(e);
+            
+            // Check for staggered course mistakes
             CheckCourseCompletion(e.DishInstanceIds);
         }
-
-        /// <summary>
-        /// Registers a ticket for scoring tracking.
-        /// Should be called by TicketManager when a new ticket is created.
-        /// </summary>
-        public void RegisterTicket(TicketData ticket)
+        
+        private void OnDishDied(DishDiedEvent e)
         {
-            _activeTickets[ticket.TicketId] = ticket;
-            DebugLogger.Log(DebugLogger.Category.SCORE, $"Registered ticket #{ticket.TicketId} with {ticket.Courses.Count} course(s)");
+            // Log a mistake when a dish dies on the pass
+            var mistake = new Mistake
+            {
+                Type = MistakeType.DeadDish,
+                DishData = e.DishData,
+                Timestamp = e.Timestamp,
+                Description = $"{e.DishData.dishName} died on pass"
+            };
+            
+            _mistakesThisShift.Add(mistake);
+            
+            DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                $"❌ MISTAKE: {mistake.Description}");
+            
+            // Trigger game feel feedback
+            PublishGameFeelEvent(mistake);
+        }
+        
+        private void OnAllTablesServed(AllTablesServedEvent e)
+        {
+            // Shift is over - publish the end-of-shift report event
+            DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                $"🏁 Shift complete! Total mistakes: {_mistakesThisShift.Count}");
+            
+            EventBus.Publish(new ShowEndOfShiftReportEvent
+            {
+                Mistakes = _mistakesThisShift,
+                TotalTicketsServed = e.TotalTicketsServed,
+                ShiftDuration = e.ShiftDuration,
+                Timestamp = e.Timestamp
+            });
+            
+            // Display the UI report
+            if (endOfShiftReportUI != null)
+            {
+                endOfShiftReportUI.DisplayReport(_mistakesThisShift, e.TotalTicketsServed, e.ShiftDuration);
+            }
+            else
+            {
+                DebugLogger.LogWarning(DebugLogger.Category.MISTAKE, 
+                    "EndOfShiftReportUI reference is missing! Cannot display report.");
+            }
         }
 
         /// <summary>
+        /// Checks if dishes were sent to the wrong table.
+        /// </summary>
+        private void CheckForWrongTableMistakes(DishesServedEvent e)
+        {
+            var tableNumber = e.TableNumber;
+            var orderState = tableManager?.GetTableOrderState(tableNumber);
+            
+            if (orderState == null)
+            {
+                DebugLogger.LogWarning(DebugLogger.Category.MISTAKE, 
+                    $"No order state found for table {tableNumber} - this shouldn't happen!");
+                return;
+            }
+            
+            // Check each served dish for wrong table mistakes
+            foreach (var dishData in e.ServedDishTypes)
+            {
+                // Check if this dish type exists in the table's order at all
+                // We need to check across ALL expectations (served and unserved) to detect wrong table
+                bool hasExpectationAnywhere = false;
+                foreach (var courseOrder in orderState.Courses)
+                {
+                    foreach (var expectation in courseOrder.Dishes)
+                    {
+                        if (expectation.DishType.dishName == dishData.dishName)
+                        {
+                            hasExpectationAnywhere = true;
+                            break;
+                        }
+                    }
+                    if (hasExpectationAnywhere) break;
+                }
+                
+                if (!hasExpectationAnywhere)
+                {
+                    // Wrong table - dish not expected on this table at all
+                    var mistake = new Mistake
+                    {
+                        Type = MistakeType.WrongTable,
+                        DishData = dishData,
+                        TableNumber = tableNumber,
+                        Timestamp = e.Timestamp,
+                        Description = $"{dishData.dishName} wasn't expected on Table {tableNumber}"
+                    };
+                    
+                    _mistakesThisShift.Add(mistake);
+                    
+                    DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                        $"❌ MISTAKE: {mistake.Description}");
+                    
+                    // Trigger game feel feedback
+                    PublishGameFeelEvent(mistake);
+                }
+            }
+        }
+        
+        /// <summary>
         /// Checks if any courses were completed with the recently served dishes.
-        /// REFACTORED: Now uses TableOrderState instead of CourseData.Expectations
+        /// Now checks for staggered course mistakes instead of scoring.
         /// </summary>
         private void CheckCourseCompletion(List<int> servedDishIds)
         {
@@ -108,30 +213,50 @@ namespace Expo.Managers
                 {
                     string courseKey = $"{ticket.TicketId}_{course.CourseNumber}";
                     
-                    // Skip if already scored
-                    if (_scoredCourses.Contains(courseKey))
+                    // Skip if already checked
+                    if (_checkedCourses.Contains(courseKey))
                         continue;
                     
-                    // Check if all dishes in this course have been served (by checking DishState)
-                    // This works even if dishes were reassigned to different tables
+                    // Check if all dishes in this course have been served
                     bool allDishesServed = course.Dishes.All(d => d.Status == DishStatus.Served);
                     
                     if (allDishesServed)
                     {
                         DebugLogger.Log(DebugLogger.Category.SCORE, 
-                            $"Course {course.CourseNumber} on ticket #{ticket.TicketId} complete! All {course.Dishes.Count} dishes served (possibly to different tables)");
+                            $"Course {course.CourseNumber} on ticket #{ticket.TicketId} complete! All {course.Dishes.Count} dishes served");
                         
-                        // Mark as scored to avoid duplicates
-                        _scoredCourses.Add(courseKey);
+                        // Mark as checked to avoid duplicates
+                        _checkedCourses.Add(courseKey);
                         
-                        // Calculate course score using the original table's expectations
-                        // (This gets expectations from wherever the dishes ended up)
-                        ScoreCourse(ticket, course, orderState);
+                        // Check for staggered course mistakes
+                        CheckForStaggeredCourseMistake(ticket, course, orderState);
+                        
+                        // Publish course completed event (keep for other systems)
+                        var courseExpectations = orderState.GetCourseExpectations(course.CourseNumber);
+                        var serveTimes = courseExpectations
+                            .Where(e => e.ServedTime.HasValue)
+                            .Select(e => e.ServedTime.Value)
+                            .ToList();
+                        
+                        float maxTime = serveTimes.Count > 0 ? serveTimes.Max() : GameTime.Time;
+                        // No threshold - must be exact same time
+                        bool allTogether = serveTimes.Count > 1 && serveTimes.All(t => Mathf.Approximately(t, serveTimes[0]));
+                        
+                        EventBus.Publish(new CourseCompletedEvent
+                        {
+                            TicketId = ticket.TicketId,
+                            CourseNumber = course.CourseNumber,
+                            DishCount = courseExpectations.Count,
+                            CompletionTime = maxTime,
+                            AllDishesTogether = allTogether,
+                            TimingScore = 0f // No longer used
+                        });
                         
                         // Check if entire ticket is complete
                         if (ticket.Courses.All(c => c.Dishes.All(d => d.Status == DishStatus.Served)))
                         {
-                            DebugLogger.Log(DebugLogger.Category.SCORE, $"All dishes served for ticket #{ticket.TicketId} - removing from active tickets");
+                            DebugLogger.Log(DebugLogger.Category.SCORE, 
+                                $"All dishes served for ticket #{ticket.TicketId} - removing from active tickets");
                             _activeTickets.Remove(ticket.TicketId);
                         }
                     }
@@ -140,11 +265,14 @@ namespace Expo.Managers
         }
 
         /// <summary>
-        /// Calculates and publishes the score for a completed course.
-        /// REFACTORED: Uses TableOrderState expectations instead of CourseData.Expectations
+        /// Checks if a completed course had dishes sent at staggered times (mistake).
         /// </summary>
-        private void ScoreCourse(TicketData ticket, CourseData course, TableOrderState orderState)
+        private void CheckForStaggeredCourseMistake(TicketData ticket, CourseData course, TableOrderState orderState)
         {
+            // Skip courses with only one dish (can't be staggered)
+            if (course.Dishes.Count <= 1)
+                return;
+            
             var serveTimes = new List<float>();
             
             // Get expectations for this course from the table's order state
@@ -159,68 +287,129 @@ namespace Expo.Managers
                 }
             }
 
-            if (serveTimes.Count == 0) return;
+            if (serveTimes.Count <= 1) return;
 
-            // Check if all dishes were served within the threshold window
-            float minTime = serveTimes.Min();
-            float maxTime = serveTimes.Max();
-            float timeSpread = maxTime - minTime;
+            // Check if all dishes were served at the EXACT same time (same send action)
+            // If there are any differences in serve time, it's a mistake
+            float firstTime = serveTimes[0];
+            bool allSameTime = serveTimes.All(t => Mathf.Approximately(t, firstTime));
             
-            bool allTogether = timeSpread <= togetherThreshold;
-            
-            // Calculate score
-            float baseScore = courseExpectations.Count * baseScorePerDish;
-            float timingMultiplier = allTogether ? perfectCourseMultiplier : (1f - (timeSpread / 10f)); // Penalty for spread
-            timingMultiplier = Mathf.Max(timingMultiplier, 0.5f); // Minimum 50% of base score
-            
-            float finalScore = baseScore * timingMultiplier;
-            
-            // Generate feedback
-            string feedback;
-            if (allTogether)
+            if (!allSameTime)
             {
-                feedback = "Perfect timing! All dishes sent together.";
+                // Staggered course - create mistake with detailed timing info
+                var staggeredDishes = new List<DishServeInfo>();
+                
+                foreach (var expectation in courseExpectations)
+                {
+                    if (expectation.ServedTime.HasValue)
+                    {
+                        staggeredDishes.Add(new DishServeInfo
+                        {
+                            DishData = expectation.DishType,
+                            ServeTime = expectation.ServedTime.Value,
+                            FormattedTime = FormatGameTime(expectation.ServedTime.Value)
+                        });
+                    }
+                }
+                
+                // Sort by serve time
+                staggeredDishes.Sort((a, b) => a.ServeTime.CompareTo(b.ServeTime));
+                
+                // Create description with dish names and times
+                var dishDetails = string.Join(", ", staggeredDishes.Select(d => 
+                    $"{d.DishData.dishName} at {d.FormattedTime}"));
+                
+                var mistake = new Mistake
+                {
+                    Type = MistakeType.StaggeredCourse,
+                    TicketId = ticket.TicketId,
+                    CourseNumber = course.CourseNumber,
+                    TableNumber = ticket.AssignedTable.TableNumber,
+                    Timestamp = serveTimes.Max(),
+                    StaggeredDishes = staggeredDishes,
+                    Description = $"Course {course.CourseNumber} on Ticket #{ticket.TicketId} (Table {ticket.AssignedTable.TableNumber}): {dishDetails}"
+                };
+                
+                _mistakesThisShift.Add(mistake);
+                
+                DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                    $"❌ MISTAKE: Staggered course - {mistake.Description}");
+                
+                // Trigger game feel feedback
+                PublishGameFeelEvent(mistake);
             }
-            else if (timeSpread < 5f)
+        }
+        
+        /// <summary>
+        /// Formats a game timestamp into human-readable time (e.g., "5:30 PM").
+        /// </summary>
+        private string FormatGameTime(float timestamp)
+        {
+            // Use ShiftTimerManager if available to get proper time formatting
+            if (shiftTimerManager != null)
             {
-                feedback = "Good timing, minor delays.";
+                return shiftTimerManager.GetCurrentTimeString();
             }
-            else
-            {
-                feedback = "Staggered service, significant delays.";
-            }
             
-            DebugLogger.Log(DebugLogger.Category.SCORE, $"Course {course.CourseNumber} on ticket #{ticket.TicketId}: {feedback} (Score: {finalScore:F1}, Spread: {timeSpread:F2}s)");
-            
-            // Publish events
-            EventBus.Publish(new CourseCompletedEvent
-            {
-                TicketId = ticket.TicketId,
-                CourseNumber = course.CourseNumber,
-                DishCount = courseExpectations.Count,
-                CompletionTime = maxTime,
-                AllDishesTogether = allTogether,
-                TimingScore = finalScore
-            });
-            
-            EventBus.Publish(new CourseScoreEvent
-            {
-                TicketId = ticket.TicketId,
-                CourseNumber = course.CourseNumber,
-                Score = finalScore,
-                Feedback = feedback
-            });
+            // Fallback: just return the raw timestamp
+            return $"{timestamp:F1}s";
         }
 
+        /// <summary>
+        /// Registers a ticket for mistake tracking.
+        /// Should be called by TicketManager when a new ticket is created.
+        /// </summary>
+        public void RegisterTicket(TicketData ticket)
+        {
+            _activeTickets[ticket.TicketId] = ticket;
+            DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                $"Registered ticket #{ticket.TicketId} for mistake tracking");
+        }
+        
         /// <summary>
         /// Unregisters a ticket (called when ticket is completed/removed).
         /// </summary>
         public void UnregisterTicket(int ticketId)
         {
             _activeTickets.Remove(ticketId);
-            
-            // Clean up dish served times for this ticket
-            // (In a real implementation, you'd track which dishes belong to which tickets)
+        }
+        
+        /// <summary>
+        /// Gets the list of all mistakes made during the current shift.
+        /// Called by UI to display the end-of-shift report.
+        /// </summary>
+        public List<Mistake> GetMistakes()
+        {
+            return _mistakesThisShift;
+        }
+        
+        /// <summary>
+        /// Gets the count of mistakes made during the current shift.
+        /// </summary>
+        public int GetMistakeCount()
+        {
+            return _mistakesThisShift.Count;
+        }
+        
+        /// <summary>
+        /// Gets the count of mistakes by type.
+        /// </summary>
+        public int GetMistakeCountByType(MistakeType type)
+        {
+            return _mistakesThisShift.Count(m => m.Type == type);
+        }
+
+        /// <summary>
+        /// Publishes a GameFeelEvent to trigger visual/audio feedback for mistakes.
+        /// </summary>
+        private void PublishGameFeelEvent(Mistake mistake)
+        {
+            EventBus.Publish(new GameFeelEvent
+            {
+                EventType = GameFeelEventType.Mistake,
+                Timestamp = mistake.Timestamp,
+                Context = mistake
+            });
         }
     }
 }

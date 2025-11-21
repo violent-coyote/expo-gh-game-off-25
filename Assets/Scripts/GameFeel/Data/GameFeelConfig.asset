@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22ebd7c76f26f4a0f80eacf5f98d6ec7, type: 3}
+  m_Name: GameFeelConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Expo.GameFeel.GameFeelConfig
+  enableGameFeel: 1
+  mistakeProfile:
+    enableCameraShake: 1
+    enableScreenFlash: 1
+    shakeDuration: 0.3
+    shakeStrength: 0.5
+    shakeVibrato: 10
+    shakeRandomness: 90
+    flashColor: {r: 1, g: 0, b: 0, a: 0.3}
+    flashFadeInDuration: 0.05
+    flashFadeOutDuration: 0.25
+  ticketSpawnedProfile:
+    enableCameraShake: 0
+    enableScreenFlash: 0
+    shakeDuration: 0.2
+    shakeStrength: 0.2
+    shakeVibrato: 8
+    shakeRandomness: 90
+    flashColor: {r: 1, g: 1, b: 1, a: 0.2}
+    flashFadeInDuration: 0.05
+    flashFadeOutDuration: 0.2
+  ticketCompletedProfile:
+    enableCameraShake: 0
+    enableScreenFlash: 1
+    shakeDuration: 0.2
+    shakeStrength: 0.2
+    shakeVibrato: 8
+    shakeRandomness: 90
+    flashColor: {r: 0.48540387, g: 1, b: 0.3537736, a: 0.2}
+    flashFadeInDuration: 0.05
+    flashFadeOutDuration: 0.2
+  comboTimeWindow: 4
+  comboIntensityMultiplier: 0.5
+  maxComboMultiplier: 5

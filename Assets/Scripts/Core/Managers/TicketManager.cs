@@ -9,6 +9,7 @@ using Expo.Runtime;
 using Expo.Core.Events;
 using Expo.UI;
 using Expo.Managers;
+using Expo.GameFeel;
 
 namespace Expo.Core.Managers
 {
@@ -114,6 +115,14 @@ namespace Expo.Core.Managers
 						HadDeadDishes = hadDeadDishes,
 						TotalDishes = ticket.TotalDishCount()
 					});
+					
+					// Trigger game feel feedback for ticket completion
+					EventBus.Publish(new GameFeelEvent
+					{
+						EventType = GameFeelEventType.TicketCompleted,
+						Timestamp = GameTime.Time,
+						Context = ticket
+					});
 
 					_activeTickets.RemoveAt(i);
 					_currentTicketCount--;
@@ -216,6 +225,14 @@ namespace Expo.Core.Managers
 			{
 				TicketId = ticketId,
 				Timestamp = GameTime.Time
+			});
+			
+			// Trigger game feel feedback for ticket spawn
+			EventBus.Publish(new GameFeelEvent
+			{
+				EventType = GameFeelEventType.TicketSpawned,
+				Timestamp = GameTime.Time,
+				Context = ticket
 			});
 
 			// Instantiate UI

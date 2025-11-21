@@ -176,16 +176,6 @@ namespace Expo.UI
                 text.color = Color.gray;
             }
 
-            var btn = row.GetComponentInChildren<Button>();
-            
-            // REMOVED: Individual dish firing functionality
-            // Players can only use "Fire the Board" to fire all available dishes at once
-            // Individual fire buttons are now hidden
-            if (btn != null)
-            {
-                btn.gameObject.SetActive(false);
-            }
-            
             // Find the DishState from the original ticket for tracking purposes
             DishState dishState = FindDishStateByInstanceId(expectation.DishInstanceId);
             
@@ -200,7 +190,7 @@ namespace Expo.UI
                     if (!isCourseUnlocked)
                     {
                         text.color = Color.gray;
-                        text.text = $"{expectation.DishType.dishName}(C{expectation.CourseNumber})";
+                        // text.text = $"{expectation.DishType.dishName}(C{expectation.CourseNumber})";
                     }
                 }
             }

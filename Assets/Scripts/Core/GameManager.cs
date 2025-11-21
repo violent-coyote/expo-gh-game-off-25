@@ -24,6 +24,7 @@ namespace Expo.Core
         [SerializeField] private bool enableCourseLogs = true;
         [SerializeField] private bool enableStationLogs = true;
         [SerializeField] private bool enableScoreLogs = true;
+        [SerializeField] private bool enableMistakeLogs = true;
         [SerializeField] private bool enableUILogs = true;
         [SerializeField] private bool enableTimeLogs = true;
         [SerializeField] private bool enableGeneralLogs = true;
@@ -82,6 +83,7 @@ namespace Expo.Core
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.COURSE, enableCourseLogs);
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.STATION, enableStationLogs);
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.SCORE, enableScoreLogs);
+            DebugLogger.SetCategoryEnabled(DebugLogger.Category.MISTAKE, enableMistakeLogs);
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.UI, enableUILogs);
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.TIME, enableTimeLogs);
             DebugLogger.SetCategoryEnabled(DebugLogger.Category.GENERAL, enableGeneralLogs);
