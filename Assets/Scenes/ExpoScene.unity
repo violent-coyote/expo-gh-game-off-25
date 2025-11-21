@@ -597,7 +597,7 @@ MonoBehaviour:
     RequiredTag: 
     Camera: {fileID: 0}
     Distance: 50
-  deselectWithFingers: 1
+  deselectWithFingers: 0
   onSelectedFinger:
     m_PersistentCalls:
       m_Calls: []
@@ -2750,10 +2750,6 @@ PrefabInstance:
     - target: {fileID: 765129659068796464, guid: 423b02d1c024141cf96cb2a197a356ca, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2124729120047942769, guid: 423b02d1c024141cf96cb2a197a356ca, type: 3}
-      propertyPath: tapThreshold
-      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4515874051326002659, guid: 423b02d1c024141cf96cb2a197a356ca, type: 3}
       propertyPath: m_Name

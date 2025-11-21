@@ -21,6 +21,7 @@ namespace Expo.Core.GameObjects
         private bool _walkingMarked;
         private LeanSelectableByFinger _leanSelectable;
         private Color _originalColor;
+        private LeanDragTranslate _dragTranslate;
 
         public void Init(DishState dish)
         {
@@ -37,12 +38,15 @@ namespace Expo.Core.GameObjects
                 _leanSelectable.OnSelected.AddListener(OnSelected);
                 _leanSelectable.OnDeselected.AddListener(OnDeselected);
                 
-                // CRITICAL: Ensure LeanDragTranslate doesn't require selection
-                var dragTranslate = _leanSelectable.GetComponent<LeanDragTranslate>();
-                if (dragTranslate != null)
+                // Configure drag to use ManuallyAddedFingers for per-instance isolation
+                _dragTranslate = _leanSelectable.GetComponent<LeanDragTranslate>();
+                if (_dragTranslate != null)
                 {
-                    dragTranslate.Use.RequiredSelectable = null;
-                    DebugLogger.Log(DebugLogger.Category.PASS, $"PassedDish {dish.Data.dishName}: Cleared RequiredSelectable on drag");
+                    // Create new filter instance for this dish
+                    _dragTranslate.Use = new LeanFingerFilter(LeanFingerFilter.FilterType.ManuallyAddedFingers, true, 0, 0, null);
+                    
+                    // Hook into global finger down events to detect touches on THIS dish
+                    LeanTouch.OnFingerDown += OnFingerTouchDish;
                 }
                 
                 DebugLogger.Log(DebugLogger.Category.PASS, $"PassedDish {dish.Data.dishName}: Hooked into selection events");
@@ -96,6 +100,25 @@ namespace Expo.Core.GameObjects
             DebugLogger.Log(DebugLogger.Category.PASS, $"Dish DESELECTED/STOPPED: {_dishState.Data.dishName}");
         }
 
+        private void OnFingerTouchDish(LeanFinger finger)
+        {
+            // When a finger touches down, check if it's on THIS dish's collider
+            if (_dragTranslate != null && _leanSelectable != null)
+            {
+                // Check if the finger is over this dish's collider
+                var collider = _leanSelectable.GetComponent<Collider2D>();
+                if (collider != null)
+                {
+                    Vector2 worldPoint = Camera.main.ScreenToWorldPoint(finger.ScreenPosition);
+                    if (collider.OverlapPoint(worldPoint))
+                    {
+                        _dragTranslate.AddFinger(finger);
+                        DebugLogger.Log(DebugLogger.Category.PASS, $"Finger added to drag for: {_dishState.Data.dishName}");
+                    }
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             // Clean up event listeners
@@ -104,6 +127,9 @@ namespace Expo.Core.GameObjects
                 _leanSelectable.OnSelected.RemoveListener(OnSelected);
                 _leanSelectable.OnDeselected.RemoveListener(OnDeselected);
             }
+            
+            // Clean up global finger events
+            LeanTouch.OnFingerDown -= OnFingerTouchDish;
         }
     }
 }
