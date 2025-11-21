@@ -200,21 +200,21 @@ namespace Expo.UI
         {
             if (textComponent == null) return;
 
-            string text = $"Table {table.TableNumber}\n{table.PartySize} guests";
+            string text = $"{table.TableNumber}";
             
-            if (table.CurrentTicketId.HasValue)
-            {
-                text += $"\nTicket #{table.CurrentTicketId.Value}";
-            }
+            // if (table.CurrentTicketId.HasValue)
+            // {
+            //     text += $"\nTicket #{table.CurrentTicketId.Value}";
+            // }
             
-            if (table.IsEating)
-            {
-                text += $"\n(Eating...)";
-            }
-            else if (!table.IsOccupied)
-            {
-                text += "\n(Empty)";
-            }
+            // if (table.IsEating)
+            // {
+            //     text += $"\n(Eating...)";
+            // }
+            // else if (!table.IsOccupied)
+            // {
+            //     text += "\n(Empty)";
+            // }
             
             textComponent.text = text;
         }
@@ -252,6 +252,11 @@ namespace Expo.UI
             button.targetGraphic = buttonImage;
             button.transition = Selectable.Transition.ColorTint;
             
+            // Disable navigation to prevent button staying selected after click
+            Navigation nav = button.navigation;
+            nav.mode = Navigation.Mode.None;
+            button.navigation = nav;
+            
             // Configure color transitions for visual feedback
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
@@ -269,7 +274,7 @@ namespace Expo.UI
             
             TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
             textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.fontSize = 14;
+            textComponent.autoSizeTextContainer = true;
             textComponent.color = Color.black;
             
             // Set RectTransform to fill parent

@@ -476,7 +476,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -10}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 50}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &121925509
@@ -807,7 +807,7 @@ GameObject:
   - component: {fileID: 226011291}
   - component: {fileID: 226011290}
   m_Layer: 5
-  m_Name: TableButtonPanel
+  m_Name: MenuButtonPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -849,11 +849,11 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 0
+  m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 100, y: 100}
-  m_Spacing: {x: 0, y: 0}
+  m_Spacing: {x: 40, y: 40}
   m_Constraint: 0
   m_ConstraintCount: 2
 --- !u!114 &226011291
@@ -1599,7 +1599,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1f4475fd79f248dfb11a188066feeab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Core.Managers.StationManager
-  stationName: Garde Manger
+  stationName: Garmo
   progressBarContainer: {fileID: 279019579}
   progressBarPrefab: {fileID: 4453022403986231516, guid: ba309c8bc91a742699011c625dc744b7, type: 3}
 --- !u!1 &832575517
@@ -1976,7 +1976,7 @@ MonoBehaviour:
   enableCourseLogs: 0
   enableStationLogs: 0
   enableScoreLogs: 0
-  enableMistakeLogs: 1
+  enableMistakeLogs: 0
   enableUILogs: 0
   enableTimeLogs: 0
   enableGeneralLogs: 0
@@ -2026,10 +2026,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Expo.Managers.TableManager
-  totalTableCount: 10
+  totalTableCount: 5
   percent2Tops: 50
   percent4Tops: 50
-  seatCheckInterval: 3
+  seatCheckInterval: 12
   ticketManager: {fileID: 1285406890}
   shiftTimerManager: {fileID: 1285406896}
 --- !u!114 &1285406896
@@ -2217,10 +2217,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 190058854}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -50, y: 0}
-  m_SizeDelta: {x: 100, y: 400}
+  m_AnchorMin: {x: 1, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchoredPosition: {x: -114.95595, y: -0.0000076293945}
+  m_SizeDelta: {x: 229.9119, y: 525.31006}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1399844626
 MonoBehaviour:
@@ -2243,7 +2243,7 @@ MonoBehaviour:
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 100, y: 100}
-  m_Spacing: {x: 0, y: 0}
+  m_Spacing: {x: 5, y: 5}
   m_Constraint: 0
   m_ConstraintCount: 2
 --- !u!114 &1399844627

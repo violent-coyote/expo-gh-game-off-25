@@ -136,6 +136,11 @@ namespace Expo.UI
             button.targetGraphic = buttonImage;
             button.transition = Selectable.Transition.ColorTint;
             
+            // Disable navigation to prevent button staying selected after click
+            Navigation nav = button.navigation;
+            nav.mode = Navigation.Mode.None;
+            button.navigation = nav;
+            
             // Configure color transitions for visual feedback
             ColorBlock colors = button.colors;
             colors.normalColor = Color.white;
@@ -152,9 +157,9 @@ namespace Expo.UI
             textObj.transform.SetParent(buttonObj.transform, false);
             
             TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
-            textComponent.text = $"{dishData.dishName}\n{dishData.station}\n{dishData.pickupTime}s";
+            textComponent.text = $"{dishData.dishName}\n{dishData.station}";
             textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.fontSize = 12;
+            textComponent.autoSizeTextContainer = true;
             textComponent.color = Color.black;
             
             // Set RectTransform to fill parent

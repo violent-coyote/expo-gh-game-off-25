@@ -89,6 +89,11 @@ namespace Expo.UI
             
             if (button != null)
             {
+                // Disable navigation to prevent button staying selected after click
+                Navigation nav = button.navigation;
+                nav.mode = Navigation.Mode.None;
+                button.navigation = nav;
+                
                 // Only allow clicking on unlocked dishes
                 button.interactable = isUnlocked;
                 
