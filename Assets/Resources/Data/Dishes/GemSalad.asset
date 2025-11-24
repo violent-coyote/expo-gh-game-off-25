@@ -16,4 +16,4 @@ MonoBehaviour:
   station: Garde Manger
   pickupTime: 10
   dieTime: 30
-  icon: {fileID: 21300000, guid: 1979490a4a0a15841a34482f90b473d2, type: 3}
+  icon: {fileID: 21300000, guid: 928772d7637bf48bfb6e07ee3bfb075b, type: 3}
