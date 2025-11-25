@@ -153,7 +153,14 @@ namespace Expo.Controllers
         // Public function to return to PreShiftUI Scene
         public void ReturnToPreShiftUI()
         {
-            SceneManager.LoadScene("PreShiftUI");
+            // Ensure progression data is saved before transitioning
+            if (Expo.Core.Progression.ProgressionManager.Instance != null)
+            {
+                Expo.Core.Progression.ProgressionManager.Instance.SavePlayerData();
+                DebugLogger.Log(DebugLogger.Category.PROGRESSION, "Saved player data before returning to title screen");
+            }
+            
+            SceneManager.LoadScene("TitleScene");
         }
     }
 }

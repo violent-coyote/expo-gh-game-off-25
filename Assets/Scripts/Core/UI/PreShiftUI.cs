@@ -19,6 +19,7 @@ namespace Expo.UI
         [SerializeField] private Transform dishListContainer;
         [SerializeField] private GameObject dishButtonPrefab;
         [SerializeField] private Button startShiftButton;
+        [SerializeField] private TMP_FontAsset customFont; // Rainhearts Bitmap font
         
         [Header("Available Dishes")]
         [SerializeField] private bool useProgressionSystem = true;
@@ -83,9 +84,32 @@ namespace Expo.UI
         {
             if (dishButtonPrefab == null || dishListContainer == null) return;
             
-            var buttonGO = Instantiate(dishButtonPrefab, dishListContainer);
+            // Create a container for the button and text
+            GameObject containerGO = new GameObject($"{dish.dishName}Container");
+            containerGO.transform.SetParent(dishListContainer, false);
+            
+            // Add horizontal layout group to arrange button and text side by side
+            HorizontalLayoutGroup layoutGroup = containerGO.AddComponent<HorizontalLayoutGroup>();
+            layoutGroup.childAlignment = TextAnchor.MiddleLeft;
+            layoutGroup.spacing = 10;
+            layoutGroup.childControlWidth = false;
+            layoutGroup.childControlHeight = false;
+            layoutGroup.childForceExpandWidth = false;
+            layoutGroup.childForceExpandHeight = false;
+            
+            // Add RectTransform to container
+            RectTransform containerRect = containerGO.GetComponent<RectTransform>();
+            containerRect.sizeDelta = new Vector2(400, 150); // Width for button + text, height matches button
+            
+            var buttonGO = Instantiate(dishButtonPrefab, containerGO.transform);
             var button = buttonGO.GetComponent<Button>();
-            var text = buttonGO.GetComponentInChildren<TextMeshProUGUI>();
+            
+            // Set button size to 150x150
+            RectTransform buttonRect = buttonGO.GetComponent<RectTransform>();
+            if (buttonRect != null)
+            {
+                buttonRect.sizeDelta = new Vector2(150, 150);
+            }
             
             if (button != null)
             {
@@ -105,16 +129,50 @@ namespace Expo.UI
                 dishButtons.Add(button);
             }
             
-            if (text != null)
+            // Create icon child
+            if (dish.icon != null)
             {
-                // Show locked dishes with visual indicator
-                text.text = isUnlocked ? dish.dishName : $"🔒 {dish.dishName}";
+                GameObject iconObj = new GameObject("Icon");
+                iconObj.transform.SetParent(buttonGO.transform, false);
                 
-                // Dim locked dishes
+                Image iconImage = iconObj.AddComponent<Image>();
+                iconImage.sprite = dish.icon;
+                iconImage.preserveAspect = true; // Maintain aspect ratio
+                
+                // Set RectTransform with padding to fit nicely within button
+                RectTransform iconRect = iconImage.GetComponent<RectTransform>();
+                iconRect.anchorMin = Vector2.zero;
+                iconRect.anchorMax = Vector2.one;
+                iconRect.sizeDelta = new Vector2(-10, -10); // 5px padding on all sides
+                iconRect.anchoredPosition = Vector2.zero;
+                
+                // Dim icon for locked dishes
                 if (!isUnlocked)
                 {
-                    text.alpha = 0.5f;
+                    iconImage.color = new Color(1f, 1f, 1f, 0.5f);
                 }
+            }
+            
+            // Create text info to the right of the button
+            GameObject textObj = new GameObject("DishInfo");
+            textObj.transform.SetParent(containerGO.transform, false);
+            
+            RectTransform textRect = textObj.AddComponent<RectTransform>();
+            textRect.sizeDelta = new Vector2(200, 150);
+            
+            TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
+            textComponent.text = isUnlocked ? 
+                $"{dish.dishName}\n{dish.pickupTime}s pickup" : 
+                $"LOCKED {dish.dishName}\n{dish.pickupTime}s pickup";
+            textComponent.fontSize = 48;
+            textComponent.color = Color.black;
+            textComponent.alignment = TextAlignmentOptions.Left;
+            textComponent.verticalAlignment = VerticalAlignmentOptions.Middle;
+            
+            // Apply custom font if available
+            if (customFont != null)
+            {
+                textComponent.font = customFont;
             }
             
             // Set visual state for locked dishes

@@ -51,7 +51,7 @@ namespace Expo.Data
             int min = PartySize;
             int max = (int)(PartySize * 1.5f);
             int count = UnityEngine.Random.Range(min, max + 1);
-            return UnityEngine.Mathf.Clamp(count, 1, 9);
+            return UnityEngine.Mathf.Clamp(count, 1, 5);
         }
 
         /// <summary>
@@ -61,9 +61,9 @@ namespace Expo.Data
         public int GetRecommendedCourseCount()
         {
             if (PartySize <= 2)
-                return UnityEngine.Random.Range(1, 3); // 1-2 courses
+                return UnityEngine.Random.Range(1, 2); // 1-2 courses
             else
-                return UnityEngine.Random.Range(2, 4); // 2-3 courses
+                return UnityEngine.Random.Range(2, 2); // 2-3 courses
         }
 
         /// <summary>

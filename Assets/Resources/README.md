@@ -1,43 +1,42 @@
 # Resources Folder
 
-This folder contains assets that need to be loaded at runtime in builds (especially WebGL).
+This folder contains assets that are loaded at runtime using `Resources.Load()`.
 
 ## Why this folder exists
 
-Unity requires assets loaded at runtime via `Resources.Load()` to be in a folder named "Resources". In the editor, we can use `AssetDatabase` to load assets from anywhere, but in builds (WebGL, standalone, etc.), we need the Resources folder.
+Unity requires assets loaded at runtime via `Resources.Load()` to be in a folder named "Resources". This works the same in both the editor and builds (WebGL, standalone, etc.).
 
 ## Contents
 
-- **Data/Dishes/** - All DishData ScriptableObjects that need to be available at runtime
+- **Data/Dishes/** - All DishData ScriptableObjects for the game
 - **Data/progression_config.json** - The progression configuration file
 
-## Keeping Resources in sync
+## Working with Dishes
 
-**IMPORTANT:** When you add or modify dishes in `Assets/Data/Dishes/`, you must copy them to `Assets/Resources/Data/Dishes/` before building.
+**To create or edit dishes:** Work directly in `Assets/Resources/Data/Dishes/`
 
-### Easy way to sync:
-Use the menu: **Expo → Setup Dish Resources**
+1. Right-click in the `Assets/Resources/Data/Dishes/` folder
+2. Create → Expo → Dish Data
+3. Configure the dish properties (name, station, timing, icon)
+4. The dish will be automatically available in the game (both editor and builds)
 
-This will automatically:
-1. Copy all dish assets from `Assets/Data/Dishes` to `Assets/Resources/Data/Dishes`
-2. Copy `progression_config.json` to `Assets/Resources/Data/`
+## Working with Progression
 
-### Manual way:
-1. Copy dish `.asset` files from `Assets/Data/Dishes/` to `Assets/Resources/Data/Dishes/`
-2. Copy `Assets/Data/progression_config.json` to `Assets/Resources/Data/`
+**To edit progression:** Edit `Assets/Resources/Data/progression_config.json` directly
 
-## Build checklist
+This JSON file controls:
+- Level requirements (XP thresholds)
+- Which dishes unlock at each level
+- Reward descriptions
 
-Before making a WebGL build, always:
-- [ ] Run "Expo → Setup Dish Resources" menu command
-- [ ] Verify dishes are in `Assets/Resources/Data/Dishes/`
-- [ ] Verify `progression_config.json` is in `Assets/Resources/Data/`
+## No Build Steps Required
+
+Everything in the Resources folder is automatically included in builds. No copying or syncing needed!
 
 ## Troubleshooting
 
 If you see errors like:
 - "No dishes found in Resources/Data/Dishes!"
 - "Loaded 0 dishes from disk"
-- "Created default progression config"
 
-This means the Resources folder is missing content. Run "Expo → Setup Dish Resources" to fix it.
+Create DishData assets in `Assets/Resources/Data/Dishes/` folder.

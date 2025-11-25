@@ -46,7 +46,8 @@ namespace Expo.UI
         /// Display the end-of-shift report with mistakes and grade.
         /// Called by ScoringManager when shift ends.
         /// </summary>
-        public void DisplayReport(List<Mistake> mistakes, int totalTickets, float shiftDuration)
+        public void DisplayReport(List<Mistake> mistakes, int totalTickets, float shiftDuration, 
+            int xpEarned, bool leveledUp, int oldLevel, int newLevel)
         {
             if (reportText == null)
             {
@@ -64,20 +65,22 @@ namespace Expo.UI
             Color gradeColor = gradingThresholds.GetGradeColor(grade);
             
             // Build formatted report
-            string report = BuildFormattedReport(mistakes, totalTickets, shiftDuration, grade, gradeColor, mistakeCount);
+            string report = BuildFormattedReport(mistakes, totalTickets, shiftDuration, grade, gradeColor, 
+                mistakeCount, xpEarned, leveledUp, oldLevel, newLevel);
             
             // Display
             reportText.text = report;
             gameObject.SetActive(true);
             
-            Debug.Log($"[EndOfShiftReportUI] Displayed report: {mistakeCount} mistakes, Grade: {grade}");
+            Debug.Log($"[EndOfShiftReportUI] Displayed report: {mistakeCount} mistakes, Grade: {grade}, XP: +{xpEarned}" + 
+                (leveledUp ? $", LEVEL UP! {oldLevel} → {newLevel}" : ""));
         }
         
         /// <summary>
         /// Build the formatted report string with all details
         /// </summary>
         private string BuildFormattedReport(List<Mistake> mistakes, int totalTickets, float shiftDuration, 
-            string grade, Color gradeColor, int mistakeCount)
+            string grade, Color gradeColor, int mistakeCount, int xpEarned, bool leveledUp, int oldLevel, int newLevel)
         {
             var report = new System.Text.StringBuilder();
             
@@ -107,6 +110,49 @@ namespace Expo.UI
             else
             {
                 report.AppendLine($"GRADE: {grade}");
+            }
+            report.AppendLine();
+            
+            // XP Earned Section
+            if (useRichText)
+            {
+                report.AppendLine($"<size={headerFontSize}><b><color=#FFD700>XP EARNED: +{xpEarned}</color></b></size>");
+            }
+            else
+            {
+                report.AppendLine($"XP EARNED: +{xpEarned}");
+            }
+            
+            // Level Up notification
+            if (leveledUp)
+            {
+                if (useRichText)
+                {
+                    report.AppendLine($"<color=#00FF00><b>🎉 LEVEL UP! {oldLevel} → {newLevel}</b></color>");
+                }
+                else
+                {
+                    report.AppendLine($"LEVEL UP! {oldLevel} → {newLevel}");
+                }
+            }
+            
+            // Current progression info
+            var progressionManager = Expo.Core.Progression.ProgressionManager.Instance;
+            if (progressionManager != null)
+            {
+                int currentXP = progressionManager.CurrentSave.currentXP;
+                int xpForNext = progressionManager.GetXPForNextLevel();
+                int currentLevel = progressionManager.GetCurrentPlayerLevel();
+                
+                if (xpForNext > 0)
+                {
+                    int xpNeeded = xpForNext - currentXP;
+                    report.AppendLine($"Level {currentLevel}: {currentXP} / {xpForNext} XP ({xpNeeded} XP to next level)");
+                }
+                else
+                {
+                    report.AppendLine($"Level {currentLevel}: {currentXP} XP (MAX LEVEL)");
+                }
             }
             report.AppendLine();
             

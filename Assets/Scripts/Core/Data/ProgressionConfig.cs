@@ -103,6 +103,22 @@ namespace Expo.Data
         
         // Anything over maxMistakesForD is an F
         
+        [Header("XP Rewards")]
+        [Tooltip("XP awarded for an A grade")]
+        public int xpForA = 200;
+        
+        [Tooltip("XP awarded for a B grade")]
+        public int xpForB = 100;
+        
+        [Tooltip("XP awarded for a C grade")]
+        public int xpForC = 50;
+        
+        [Tooltip("XP awarded for a D grade")]
+        public int xpForD = 50;
+        
+        [Tooltip("XP awarded for an F grade")]
+        public int xpForF = 25;
+        
         /// <summary>
         /// Calculate letter grade based on mistake count
         /// </summary>
@@ -113,6 +129,22 @@ namespace Expo.Data
             if (mistakeCount <= maxMistakesForC) return "C";
             if (mistakeCount <= maxMistakesForD) return "D";
             return "F";
+        }
+        
+        /// <summary>
+        /// Get XP reward for a grade
+        /// </summary>
+        public int GetXPForGrade(string grade)
+        {
+            switch (grade)
+            {
+                case "A": return xpForA;
+                case "B": return xpForB;
+                case "C": return xpForC;
+                case "D": return xpForD;
+                case "F": return xpForF;
+                default: return 0;
+            }
         }
         
         /// <summary>
