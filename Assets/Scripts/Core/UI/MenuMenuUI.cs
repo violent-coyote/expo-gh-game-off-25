@@ -152,22 +152,23 @@ namespace Expo.UI
             colors.fadeDuration = 0.1f;
             button.colors = colors;
 
-            // Create text child
-            GameObject textObj = new GameObject("Text");
-            textObj.transform.SetParent(buttonObj.transform, false);
-            
-            TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
-            textComponent.text = $"{dishData.dishName}\n{dishData.station}";
-            textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.autoSizeTextContainer = true;
-            textComponent.color = Color.black;
-            
-            // Set RectTransform to fill parent
-            RectTransform textRect = textComponent.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-            textRect.anchoredPosition = Vector2.zero;
+            // Create icon child
+            if (dishData.icon != null)
+            {
+                GameObject iconObj = new GameObject("Icon");
+                iconObj.transform.SetParent(buttonObj.transform, false);
+                
+                Image iconImage = iconObj.AddComponent<Image>();
+                iconImage.sprite = dishData.icon;
+                iconImage.preserveAspect = true; // Maintain aspect ratio
+                
+                // Set RectTransform with padding to fit nicely within button
+                RectTransform iconRect = iconImage.GetComponent<RectTransform>();
+                iconRect.anchorMin = Vector2.zero;
+                iconRect.anchorMax = Vector2.one;
+                iconRect.sizeDelta = new Vector2(-10, -10); // 5px padding on all sides
+                iconRect.anchoredPosition = Vector2.zero;
+            }
 
             // Add button click listener
             button.onClick.AddListener(() => OnDishButtonClicked(dishData));

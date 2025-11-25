@@ -25,23 +25,7 @@ namespace Expo.Core.Progression
             
             try
             {
-                #if UNITY_EDITOR
-                // In editor, load from file system
-                string configPath = Path.Combine(Application.dataPath, "Data", "progression_config.json");
-                
-                if (File.Exists(configPath))
-                {
-                    string jsonContent = File.ReadAllText(configPath);
-                    _cachedConfig = JsonUtility.FromJson<ProgressionConfig>(jsonContent);
-                    DebugLogger.Log(DebugLogger.Category.PROGRESSION, $"Loaded progression config with {_cachedConfig.levels.Count} levels");
-                }
-                else
-                {
-                    DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, $"Progression config not found at {configPath}, creating default");
-                    _cachedConfig = CreateDefaultProgressionConfig();
-                }
-                #else
-                // In build, load from Resources folder
+                // Load from Resources folder for both editor and builds
                 TextAsset configAsset = Resources.Load<TextAsset>("Data/progression_config");
                 
                 if (configAsset != null)
@@ -52,10 +36,9 @@ namespace Expo.Core.Progression
                 }
                 else
                 {
-                    DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "Progression config not found in Resources/Data/, creating default");
+                    DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "Progression config not found in Resources/Data/progression_config.json, creating default");
                     _cachedConfig = CreateDefaultProgressionConfig();
                 }
-                #endif
             }
             catch (System.Exception e)
             {
@@ -67,7 +50,7 @@ namespace Expo.Core.Progression
         }
         
         /// <summary>
-        /// Load all dish assets from Assets/Data/Dishes folder
+        /// Load all dish assets from Resources/Data/Dishes folder
         /// </summary>
         public static List<DishData> LoadAllDishes()
         {
@@ -76,32 +59,17 @@ namespace Expo.Core.Progression
                 
             _cachedAllDishes = new List<DishData>();
             
-            #if UNITY_EDITOR
-            // In editor, load directly from Assets/Data/Dishes
-            string dishesPath = "Assets/Data/Dishes";
-            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:DishData", new[] { dishesPath });
-            foreach (string guid in guids)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-                DishData dish = UnityEditor.AssetDatabase.LoadAssetAtPath<DishData>(path);
-                if (dish != null)
-                {
-                    _cachedAllDishes.Add(dish);
-                }
-            }
-            #else
-            // In build, try loading from Resources folder
+            // Load from Resources folder for both editor and builds
             DishData[] dishAssets = Resources.LoadAll<DishData>("Data/Dishes");
             _cachedAllDishes.AddRange(dishAssets);
             
-            // If Resources folder doesn't exist, log a warning
+            // If Resources folder doesn't have dishes, log a warning
             if (dishAssets.Length == 0)
             {
                 DebugLogger.LogError(DebugLogger.Category.PROGRESSION, 
                     "No dishes found in Resources/Data/Dishes! " +
-                    "Make sure to create a Resources folder and copy dishes there for builds.");
+                    "Create DishData assets in Assets/Resources/Data/Dishes/ to add dishes to the game.");
             }
-            #endif
             
             DebugLogger.Log(DebugLogger.Category.PROGRESSION, $"Loaded {_cachedAllDishes.Count} dishes from disk");
             foreach (var dish in _cachedAllDishes)

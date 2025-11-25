@@ -360,8 +360,8 @@ namespace Expo.Core.Managers
 		else
 		{
 			// Fallback defaults
-			courseCount = UnityEngine.Random.Range(1, 4); // 1, 2, or 3 courses
-			totalDishCount = UnityEngine.Random.Range(courseCount, 5); // At least 1 per course, max 4 total
+			courseCount = UnityEngine.Random.Range(1, 2); // 1, 2, or 3 courses
+			totalDishCount = UnityEngine.Random.Range(courseCount, 3); // At least 1 per course, max 4 total
 			DebugLogger.Log(DebugLogger.Category.TICKET, "Using default ticket generation: {courseCount} courses, {totalDishCount} dishes");
 		}			// Distribute dishes across courses
 			List<int> dishesPerCourse = DistributeDishesAcrossCourses(courseCount, totalDishCount);

@@ -167,7 +167,7 @@ namespace Expo.UI
             
             var row = Instantiate(dishRowPrefab, dishListParent);
             var text = row.GetComponentInChildren<TextMeshProUGUI>();
-            text.text = expectation.DishType.dishName;
+            text.text = expectation.DishType.GetSlug();
             
             // If already served, show struck through
             if (expectation.IsServed)

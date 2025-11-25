@@ -1,72 +1,45 @@
 {
+  "gradingThresholds": {
+    "maxMistakesForA": 0,
+    "maxMistakesForB": 5,
+    "maxMistakesForC": 8,
+    "maxMistakesForD": 20,
+    "xpForA": 200,
+    "xpForB": 150,
+    "xpForC": 100,
+    "xpForD": 50,
+    "xpForF": 25
+  },
   "levels": [
     {
       "level": 1,
-      "levelName": "Kitchen Novice",
-      "description": "Welcome to the kitchen! Start with basic dishes.",
       "xpRequired": 0,
       "unlockedDishes": [
-        "Gem"
-      ],
-      "unlockedFeatures": [
-        "basic_tutorial"
-      ],
-      "rewardTitle": "First Steps",
-      "rewardDescription": "You've unlocked your first dish! Gem Salad is a simple garde manger dish perfect for learning the basics."
+        "Little Gem Salad",
+        "Shrimp Mafaldine"
+      ]
     },
     {
       "level": 2,
-      "levelName": "Prep Cook",
-      "description": "You're getting the hang of it. Time for more variety.",
-      "xpRequired": 100,
+      "xpRequired": 1,
       "unlockedDishes": [
-        "Leeks"
-      ],
-      "unlockedFeatures": [
-        "speed_controls"
-      ],
-      "rewardTitle": "Expanding the Menu",
-      "rewardDescription": "Leeks unlocked! This sauté station dish will test your timing skills."
+        "Bone In Ribeye"
+      ]
     },
     {
       "level": 3,
-      "levelName": "Line Cook",
-      "description": "Ready for the grill? Handle the heat!",
       "xpRequired": 250,
-      "unlockedDishes": [
-        "Steak"
-      ],
-      "unlockedFeatures": [
-        "advanced_timing",
-        "expo_shortcuts"
-      ],
-      "rewardTitle": "Mastering the Grill",
-      "rewardDescription": "Steak unlocked! This grill station dish requires perfect timing and coordination."
+      "unlockedDishes": []
     },
     {
       "level": 4,
-      "levelName": "Sous Chef",
-      "description": "A true professional. All current dishes available.",
       "xpRequired": 500,
-      "unlockedDishes": [],
-      "unlockedFeatures": [
-        "all_dishes_unlocked",
-        "advanced_scoring"
-      ],
-      "rewardTitle": "Kitchen Master",
-      "rewardDescription": "Congratulations! You've mastered all available dishes and earned the Sous Chef title."
+      "unlockedDishes": []
     },
     {
       "level": 5,
-      "levelName": "Head Chef",
-      "description": "You've reached the pinnacle of kitchen mastery.",
       "xpRequired": 1000,
-      "unlockedDishes": [],
-      "unlockedFeatures": [
-        "master_chef"
-      ],
-      "rewardTitle": "Head Chef",
-      "rewardDescription": "The kitchen is yours to command. Maximum level reached!"
+      "unlockedDishes": []
     }
   ]
 }

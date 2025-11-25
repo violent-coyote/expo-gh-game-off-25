@@ -7,6 +7,7 @@ using Expo.Data;
 using Expo.Runtime;
 using Expo.Core.Events;
 using Expo.GameFeel;
+using Expo.Core.Progression;
 
 namespace Expo.Managers
 {
@@ -31,6 +32,7 @@ namespace Expo.Managers
         [SerializeField] private TableManager tableManager;
         [SerializeField] private ShiftTimerManager shiftTimerManager;
         [SerializeField] private Expo.UI.EndOfShiftReportUI endOfShiftReportUI;
+        // Note: ProgressionManager uses singleton pattern - access via ProgressionManager.Instance
 
         // Track all mistakes made during the shift
         private readonly List<Mistake> _mistakesThisShift = new();
@@ -115,6 +117,34 @@ namespace Expo.Managers
             DebugLogger.Log(DebugLogger.Category.MISTAKE, 
                 $"🏁 Shift complete! Total mistakes: {_mistakesThisShift.Count}");
             
+            // Calculate grade and award XP
+            var progressionConfig = ProgressionConfigLoader.LoadProgressionConfig();
+            var gradingThresholds = progressionConfig.gradingThresholds;
+            int mistakeCount = _mistakesThisShift.Count;
+            string grade = gradingThresholds.CalculateGrade(mistakeCount);
+            int xpEarned = gradingThresholds.GetXPForGrade(grade);
+            
+            // Award XP to player through ProgressionManager
+            bool leveledUp = false;
+            int oldLevel = 0;
+            int newLevel = 0;
+            
+            if (ProgressionManager.Instance != null)
+            {
+                oldLevel = ProgressionManager.Instance.GetCurrentPlayerLevel();
+                leveledUp = ProgressionManager.Instance.AwardXP(xpEarned);
+                newLevel = ProgressionManager.Instance.GetCurrentPlayerLevel();
+                
+                DebugLogger.Log(DebugLogger.Category.PROGRESSION, 
+                    $"Awarded {xpEarned} XP for grade {grade}. Level: {oldLevel} → {newLevel}" + 
+                    (leveledUp ? " 🎉 LEVEL UP!" : ""));
+            }
+            else
+            {
+                DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, 
+                    "ProgressionManager.Instance is null! Cannot award XP. Make sure ProgressionManager exists in the scene.");
+            }
+            
             EventBus.Publish(new ShowEndOfShiftReportEvent
             {
                 Mistakes = _mistakesThisShift,
@@ -123,10 +153,11 @@ namespace Expo.Managers
                 Timestamp = e.Timestamp
             });
             
-            // Display the UI report
+            // Display the UI report with XP info
             if (endOfShiftReportUI != null)
             {
-                endOfShiftReportUI.DisplayReport(_mistakesThisShift, e.TotalTicketsServed, e.ShiftDuration);
+                endOfShiftReportUI.DisplayReport(_mistakesThisShift, e.TotalTicketsServed, e.ShiftDuration, 
+                    xpEarned, leveledUp, oldLevel, newLevel);
             }
             else
             {

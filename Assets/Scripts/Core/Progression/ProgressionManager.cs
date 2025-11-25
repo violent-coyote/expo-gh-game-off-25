@@ -105,8 +105,9 @@ namespace Expo.Core.Progression
         {
             SaveSystem.DeleteSaveFile();
             CurrentSave = new PlayerSaveData();
-            UnlockAllDishes();
-            DebugLogger.Log(DebugLogger.Category.PROGRESSION, "Player data reset");
+            UpdateUnlockedDishes(); // Unlock dishes based on level 1 progression
+            SavePlayerData(); // Save the fresh state
+            DebugLogger.Log(DebugLogger.Category.PROGRESSION, "Player data reset to level 1");
         }
         
         #endregion
@@ -458,12 +459,12 @@ namespace Expo.Core.Progression
             
             if (allAvailableDishes.Count == 0)
             {
-                DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "⚠️ No dishes loaded! Run 'Expo → Setup Dish Resources' and check Assets/Data/Dishes/");
+                DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "⚠️ No dishes loaded! Create DishData assets in Assets/Resources/Data/Dishes/");
             }
             
             if (ProgressionConfig?.levels?.Count == 0)
             {
-                DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "⚠️ No progression levels loaded! Check Assets/Data/progression_config.json");
+                DebugLogger.LogWarning(DebugLogger.Category.PROGRESSION, "⚠️ No progression levels loaded! Check Assets/Resources/Data/progression_config.json");
             }
             
             DebugLogger.Log(DebugLogger.Category.PROGRESSION, "=== End Verification ===");
