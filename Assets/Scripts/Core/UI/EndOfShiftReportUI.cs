@@ -172,7 +172,7 @@ namespace Expo.UI
                 report.AppendLine();
                 if (useRichText)
                 {
-                    report.AppendLine("<color=#20C020><b>PERFECT SHIFT! No mistakes made!</b></color>");
+                    report.AppendLine("<color=red><b>PERFECT SHIFT! No mistakes made!</b></color>");
                 }
                 else
                 {
