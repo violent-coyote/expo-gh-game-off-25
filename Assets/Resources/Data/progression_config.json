@@ -28,13 +28,17 @@
     },
     {
       "level": 3,
-      "xpRequired": 250,
-      "unlockedDishes": []
+      "xpRequired": 100,
+      "unlockedDishes": [
+        "Tomato Crostini"
+      ]
     },
     {
       "level": 4,
-      "xpRequired": 500,
-      "unlockedDishes": []
+      "xpRequired": 250,
+      "unlockedDishes": [
+        "Gildas"
+      ]
     },
     {
       "level": 5,
