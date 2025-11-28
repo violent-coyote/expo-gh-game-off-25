@@ -27,7 +27,7 @@ namespace Expo.UI
         
         [Header("Settings")]
         [SerializeField] private string expoSceneName = "ExpoScene";
-        [SerializeField] private int maxSelectedDishes = 8;
+        [SerializeField] private int maxSelectedDishes = 3;
         
         [HideInInspector] private List<string> selectedDishIds = new List<string>();
         [HideInInspector] private List<Button> dishButtons = new List<Button>();
@@ -76,8 +76,8 @@ namespace Expo.UI
                 CreateDishButton(dish, isUnlocked);
             }
             
-            // Select first few UNLOCKED dishes by default
-            SelectDefaultDishes(unlockedDishes);
+            // Don't auto-select any dishes - player must choose manually
+            UpdateStartButton();
         }
         
         private void CreateDishButton(DishData dish, bool isUnlocked)
@@ -219,13 +219,37 @@ namespace Expo.UI
         {
             // Select first 4 dishes by default
             int count = Mathf.Min(4, availableDishes.Count);
-            for (int i = 0; i < count && i < dishButtons.Count; i++)
+            for (int i = 0; i < count; i++)
             {
-                if (i < availableDishes.Count)
+                string dishId = availableDishes[i].dishName;
+                // Find the button that corresponds to this dish
+                Button button = FindButtonForDish(dishId);
+                if (button != null)
                 {
-                    OnDishButtonClicked(availableDishes[i].dishName, dishButtons[i]);
+                    // Directly add to selected and update visuals
+                    selectedDishIds.Add(dishId);
+                    UpdateButtonVisuals(button, true, false);
                 }
             }
+            UpdateStartButton();
+        }
+        
+        private Button FindButtonForDish(string dishId)
+        {
+            // Find the button container that has the dishId in its name
+            for (int i = 0; i < dishListContainer.childCount; i++)
+            {
+                Transform child = dishListContainer.GetChild(i);
+                if (child.name == $"{dishId}Container")
+                {
+                    // Get the button from the container's first child
+                    if (child.childCount > 0)
+                    {
+                        return child.GetChild(0).GetComponent<Button>();
+                    }
+                }
+            }
+            return null;
         }
         
         private void OnDishButtonClicked(string dishId, Button button)

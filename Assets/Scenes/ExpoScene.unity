@@ -245,6 +245,81 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &46259204
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 46259205}
+  - component: {fileID: 46259207}
+  - component: {fileID: 46259206}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &46259205
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46259204}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 170250617}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 217.9, y: 0}
+  m_SizeDelta: {x: 352.5, y: 499}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &46259206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46259204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 268987df9eebf4fd98dedbfe3efcd00a, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &46259207
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 46259204}
+  m_CullTransparentMesh: 1
 --- !u!1 &58076271
 GameObject:
   m_ObjectHideFlags: 0
@@ -849,6 +924,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 46259205}
   - {fileID: 1665149653}
   - {fileID: 1984559700}
   m_Father: {fileID: 872510411}
@@ -915,6 +991,10 @@ MonoBehaviour:
   headerFontSize: 48
   minFontSize: 12
   maxFontSize: 36
+  chefReactionImage: {fileID: 46259206}
+  happyChefSprite: {fileID: 21300000, guid: 268987df9eebf4fd98dedbfe3efcd00a, type: 3}
+  neutralChefSprite: {fileID: 21300000, guid: f22de4eda24cd4e348a271f7f1e2154a, type: 3}
+  sadChefSprite: {fileID: 21300000, guid: 7ce3287eee2c44f2ea066500aacc5eca, type: 3}
 --- !u!1 &190058853
 GameObject:
   m_ObjectHideFlags: 0
@@ -2858,7 +2938,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Expo.Managers.ShiftTimerManager
   shiftStartHour: 18
-  ticketCutoffHour: 21
+  ticketCutoffHour: 20
   realMinutesPerSimHour: 1
   tableManager: {fileID: 1285406895}
   ticketManager: {fileID: 1285406890}
@@ -3126,8 +3206,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1188655722}
   - {fileID: 1508740959}
+  - {fileID: 1188655722}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1508740958
@@ -3316,8 +3396,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -39.999985, y: -40}
+  m_AnchoredPosition: {x: 157.82199, y: 0}
+  m_SizeDelta: {x: -541.057, y: -40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1665149654
 MonoBehaviour:
@@ -3339,7 +3419,14 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: "<size=40><b>END OF SHIFT REPORT</b></size>\n\nTickets Served: 18\nShift
+    Duration: 5:00 PM - 10:15 PM (5h 15m)\n\n<size=40><b><color=#FF9800>GRADE: C</color></b></size>\n\n<size=32><b><color=#FFD700>XP
+    EARNED: +180</color></b></size>\nLevel 2: 680 / 1000 XP (320 XP to next level)\n\n<size=32><b>Mistakes:
+    5</b></size>\n\n<b>Staggered Courses:</b>\n  \u2022 Table 3: Main course served
+    before appetizer\n  \u2022 Table 7: Dessert arrived while eating appetizers\n\n<b>Dead
+    Dishes:</b>\n  \u2022 Table 5: Steak sat in window for 8 minutes\n  \u2022 Table
+    2: Pasta got cold (6 minutes)\n\n<b>Wrong Table:</b>\n  \u2022 Burger delivered
+    to Table 4 instead of Table 6\n\nWhat the fuck was that?"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
   m_sharedMaterial: {fileID: 7435676461008247531, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
@@ -3366,10 +3453,10 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 23.35
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
