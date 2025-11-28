@@ -1023,7 +1023,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: expo .... c1
+  m_text: das expo
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
   m_sharedMaterial: {fileID: 7435676461008247531, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}

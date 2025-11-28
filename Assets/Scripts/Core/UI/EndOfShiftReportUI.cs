@@ -27,6 +27,16 @@ namespace Expo.UI
         [SerializeField] private int headerFontSize = 32;
         [SerializeField] private float minFontSize = 12f;
         [SerializeField] private float maxFontSize = 36f;
+
+        // Chef Reaction Image UI Component
+        [SerializeField] private UnityEngine.UI.Image chefReactionImage;
+
+        // Happy Sprite (A grade)
+        [SerializeField] private Sprite happyChefSprite;
+        // Neutral Sprite (B and C grades)
+        [SerializeField] private Sprite neutralChefSprite;
+        // Sad Sprite (D and F grades)
+        [SerializeField] private Sprite sadChefSprite;
         
         private void Start()
         {
@@ -237,7 +247,28 @@ namespace Expo.UI
             // Footer message based on grade
             report.AppendLine();
             report.AppendLine(GetGradeMessage(grade));
-            
+
+            // based on the grade, set the chef reaction image
+            if (chefReactionImage != null)
+            {
+                switch (grade)
+                {
+                    case "A":
+                        chefReactionImage.sprite = happyChefSprite;
+                        break;
+                    case "B":
+                    case "C":
+                        chefReactionImage.sprite = neutralChefSprite;
+                        break;
+                    case "D":
+                    case "F":
+                        chefReactionImage.sprite = sadChefSprite;
+                        break;
+                    default:
+                        chefReactionImage.sprite = neutralChefSprite;
+                        break;
+                }
+            }
             return report.ToString();
         }
         
