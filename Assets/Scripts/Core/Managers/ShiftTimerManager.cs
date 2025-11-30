@@ -177,6 +177,25 @@ namespace Expo.Managers
         public bool IsShiftEnded() => _shiftEnded;
         
         /// <summary>
+        /// Gets the normalized shift time (0-1) where 0 = shift start, 1 = ticket cutoff time.
+        /// Used for spawn probability curves and difficulty scaling.
+        /// </summary>
+        public float GetNormalizedShiftTime()
+        {
+            if (!_shiftActive)
+                return 0f;
+            
+            float realTimeElapsed = GameTime.Time - _shiftStartTime;
+            float simulatedHoursElapsed = realTimeElapsed / (realMinutesPerSimHour * 60f);
+            
+            // Calculate total shift duration in simulated hours (5PM to 9PM = 4 hours)
+            float totalShiftHours = ticketCutoffHour - shiftStartHour;
+            
+            // Return normalized time (0-1)
+            return Mathf.Clamp01(simulatedHoursElapsed / totalShiftHours);
+        }
+        
+        /// <summary>
         /// Gets the current simulated time as a formatted string (e.g., "5:30 PM").
         /// </summary>
         public string GetCurrentTimeString()

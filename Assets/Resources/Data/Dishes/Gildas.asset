@@ -15,6 +15,7 @@ MonoBehaviour:
   dishName: Gildas
   slug: GILDAS
   station: Garmo
+  isFirstCourseOnly: 1
   pickupTime: 5
   dieTime: 15
   icon: {fileID: 21300000, guid: 6f62c3e0408d94addb474f24d5b9d996, type: 3}

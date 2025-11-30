@@ -1047,6 +1047,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Expo.UI.TableSelectionUI
   menuPanel: {fileID: 190058853}
   buttonContainer: {fileID: 1399844625}
+  buttonBackgroundSprite: {fileID: 21300000, guid: 562c79e2426114cf488ea1ca7ca450fe, type: 3}
+  buttonFont: {fileID: 11400000, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
+  buttonFontSize: 48
   tableManager: {fileID: 1285406895}
 --- !u!1 &226011288
 GameObject:
@@ -1244,7 +1247,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -9.9, y: 40.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &279446475
@@ -1294,8 +1297,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26.2
-  m_fontSizeBase: 26.2
+  m_fontSize: 19.9
+  m_fontSizeBase: 19.9
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1662,15 +1665,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.36620894, g: 0.9528302, b: 0.27416337, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: c4373fd0638de471b893e76c1ce3fdb1, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1712,17 +1715,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 499159329}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 190058854}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -117.5, y: 227}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: -64.955986, y: -153.02}
+  m_SizeDelta: {x: 229.91, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &499159331
 MonoBehaviour:
@@ -1744,7 +1747,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: TABLES
+  m_text: CLICK  TABLE TO SEND
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
   m_sharedMaterial: {fileID: 7435676461008247531, guid: ef7fc6718790a45ae9a81f9ddb8cb7d4, type: 2}
@@ -1753,8 +1756,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190335
-  m_fontColor: {r: 1, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -2058,15 +2061,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9529412, g: 0.29529032, b: 0.27450982, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: a260a7b756d8d4f68867e437f96f2966, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2441,7 +2444,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -9.9, y: 40.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1149846204
@@ -2491,8 +2494,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26.2
-  m_fontSizeBase: 26.2
+  m_fontSize: 19.9
+  m_fontSizeBase: 19.9
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2667,7 +2670,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -9.9, y: 40.2}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1262866637
@@ -2717,8 +2720,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26.2
-  m_fontSizeBase: 26.2
+  m_fontSize: 19.9
+  m_fontSizeBase: 19.9
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2819,17 +2822,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e755aad5dfbd466986d9c49cf602562, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Core.Managers.TicketManager
-  availableDishes:
-  - {fileID: 11400000, guid: c3a4959627e1944748a585497dcd52c0, type: 2}
-  - {fileID: 11400000, guid: e53a99a0a4164456192e044a1f65c9f8, type: 2}
-  - {fileID: 11400000, guid: 2470ffebd1c024298ac10584450e11ac, type: 2}
-  - {fileID: 11400000, guid: 5a3223d82e9e544bcb55bd1fc093e91e, type: 2}
-  - {fileID: 11400000, guid: c22c02ed142ae44a0af79bf824f39eeb, type: 2}
+  spawnProbabilityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.2
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.3071886
+      value: 0.97533166
+      inSlope: 0.70281774
+      outSlope: 0.70281774
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.46012577
+      value: 0.20959687
+      inSlope: -0.028224664
+      outSlope: -0.028224664
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.8111839
+      value: 0.395877
+      inSlope: -0.85823625
+      outSlope: -0.85823625
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.93449813
+      value: 0.21761209
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxActiveTickets: 5
   tableManager: {fileID: 1285406895}
   scoringManager: {fileID: 1285406894}
+  shiftTimerManager: {fileID: 1285406896}
   ticketUIPrefab: {fileID: 3463107928926319973, guid: 068754a7ee1fa4aa3849cfe35cadea6a, type: 3}
   ticketRailParent: {fileID: 121925508}
-  spawnLimit: 5
 --- !u!114 &1285406891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2857,6 +2906,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d292f2409cc974f38bd15439bcff9e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Core.GameManager
+  expoBackgroundAudio: {fileID: 8300000, guid: a0f5ef60865c0473eb3d533a9bf843eb, type: 3}
+  linkVolumeToSpawnCurve: 1
+  audioVolume: 0.8
+  minVolumeWhenLinked: 0.1
   enableTableLogs: 0
   enableTableManagerLogs: 0
   enableTableDebugLogs: 0
@@ -2922,7 +2975,7 @@ MonoBehaviour:
   totalTableCount: 5
   percent2Tops: 50
   percent4Tops: 50
-  seatCheckInterval: 12
+  tableCheckInterval: 2
   ticketManager: {fileID: 1285406890}
   shiftTimerManager: {fileID: 1285406896}
 --- !u!114 &1285406896
@@ -3130,9 +3183,9 @@ MonoBehaviour:
   m_Padding:
     m_Left: 0
     m_Right: 0
-    m_Top: 0
+    m_Top: 25
     m_Bottom: 0
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 100, y: 100}
@@ -3152,15 +3205,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: c05038ee7e7dc45728c707c26f36fc01, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -4092,15 +4145,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9529412, g: 0.75250643, b: 0.27450982, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
+  m_Sprite: {fileID: 21300000, guid: 904cf972c0b2d4c9497be3319662c682, type: 3}
+  m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4

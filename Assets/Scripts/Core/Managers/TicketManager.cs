@@ -16,17 +16,28 @@ namespace Expo.Core.Managers
     /// <summary>
     /// Manages ticket creation, tracking, and completion.
     /// RESPONSIBILITIES:
-    /// - Spawns tickets with random dishes at intervals
+    /// - Spawns tickets probabilistically based on AnimationCurve (configurable difficulty curve)
     /// - Tracks active tickets and their dishes
     /// - Checks for ticket completion and removes finished tickets
     /// - Creates and destroys TicketUI instances
+    /// 
+    /// SPAWN SYSTEM:
+    /// - Uses AnimationCurve to control spawn probability over normalized shift time (0-1)
+    /// - Spawn probability determines likelihood of ticket creation when table is available
+    /// - Max active tickets adjusts based on curve: >= 1.0 = 5 max, otherwise uses maxActiveTickets
+    /// - TableManager checks for available tables at fixed intervals (tableCheckInterval)
+    /// - TicketManager evaluates spawn probability when table is found
+    /// 
     /// NOTE: Does NOT change dish states - only checks status for completion.
     /// </summary>
     public class TicketManager : CoreManager
     {
-        [Header("Config")]
-        [Tooltip("All dishes loaded from disk - filtered by player's pre-shift selection")]
-        [SerializeField] private List<DishData> availableDishes; // READ-ONLY: Populated from disk
+        [Header("Spawn Configuration")]
+        [Tooltip("Curve that controls spawn probability over time. X-axis = time (0-1 normalized shift), Y-axis = spawn chance (0-1). Higher values = more aggressive spawning.")]
+        [SerializeField] private AnimationCurve spawnProbabilityCurve = AnimationCurve.EaseInOut(0f, 0.2f, 1f, 0.8f);
+        
+        [Tooltip("Maximum number of active tickets allowed at once")]
+        [SerializeField] private int maxActiveTickets = 10;
         
         [Header("References")]
         [Tooltip("Reference to TableManager for assigning tables to tickets")]
@@ -34,6 +45,12 @@ namespace Expo.Core.Managers
         
         [Tooltip("Reference to ScoringManager for tracking course completion")]
         [SerializeField] private ScoringManager scoringManager;
+        
+        [Tooltip("Reference to ShiftTimerManager for normalized time")]
+        [SerializeField] private ShiftTimerManager shiftTimerManager;
+        
+        // Loaded dynamically from disk and filtered by player selection
+        [HideInInspector] private List<DishData> availableDishes;
 
 
         private readonly List<TicketData> _activeTickets = new();
@@ -171,34 +188,51 @@ namespace Expo.Core.Managers
 		}
 		
 		// TableManager now handles eating timers and course unlocking
-	}		// Spawn Limit (removed auto-spawn, now table-driven)
-		[SerializeField] private int spawnLimit = 10;
-		private int _currentTicketCount = 0;
+	}
 		
+		private int _currentTicketCount = 0;
 
 		protected override void Update()
 		{
-			// Ticket spawning is now handled by TableManager
+			// Ticket spawning is now handled by TableManager with probability checks
 			// This Update method can be used for other time-based logic if needed
 		}
 
 		/// <summary>
 		/// Called by TableManager when a table is ready for a new party.
-		/// Creates a ticket based on the table's party size recommendations.
+		/// Uses spawn probability curve to determine if ticket should spawn.
 		/// </summary>
-	public void SpawnTicketForTable(TableData table)
+		/// <returns>True if ticket was spawned, false otherwise</returns>
+	public bool TrySpawnTicketForTable(TableData table)
 	{
 		if (availableDishes == null || availableDishes.Count == 0)
 		{
 			DebugLogger.LogWarning(DebugLogger.Category.TICKET, "No available dishes to spawn.");
-			return;
+			return false;
 		}
 
-		if (_currentTicketCount >= spawnLimit)
+		// Get current spawn limit based on curve value
+		int currentSpawnLimit = GetCurrentSpawnLimit();
+		
+		if (_currentTicketCount >= currentSpawnLimit)
 		{
-			// DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn limit reached ({spawnLimit}), skipping table {table.TableNumber}");
-			return;
-		}			int ticketId = ++_ticketCounter;
+			DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn limit reached ({_currentTicketCount}/{currentSpawnLimit}), skipping table {table.TableNumber}");
+			return false;
+		}
+		
+		// Check spawn probability based on curve
+		float spawnProbability = GetCurrentSpawnProbability();
+		float roll = UnityEngine.Random.value;
+		
+		if (roll > spawnProbability)
+		{
+			DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn roll failed: {roll:F2} > {spawnProbability:F2}, skipping table {table.TableNumber}");
+			return false;
+		}
+		
+		DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn roll success: {roll:F2} <= {spawnProbability:F2}, spawning for table {table.TableNumber}");
+		
+		int ticketId = ++_ticketCounter;
 			
 			// Create ticket with table recommendations
 			var ticket = CreateTicket(ticketId, table);
@@ -240,6 +274,51 @@ namespace Expo.Core.Managers
 			var ticketUI = ui.GetComponent<TicketUI>();
 			ticketUI.Init(ticket, tableManager);
 			_ticketUIs[ticketId] = ticketUI;
+			
+			return true;
+		}
+		
+		/// <summary>
+		/// Gets the current spawn probability from the curve based on normalized shift time.
+		/// </summary>
+		private float GetCurrentSpawnProbability()
+		{
+			if (shiftTimerManager == null)
+			{
+				DebugLogger.LogWarning(DebugLogger.Category.TICKET, "ShiftTimerManager reference missing, using default spawn probability 0.5");
+				return 0.5f;
+			}
+			
+			// Get normalized time (0-1) from shift timer
+			float normalizedTime = shiftTimerManager.GetNormalizedShiftTime();
+			float probability = spawnProbabilityCurve.Evaluate(normalizedTime);
+			
+			return Mathf.Clamp01(probability);
+		}
+
+		/// <summary>
+		/// Public accessor for spawn probability curve value.
+		/// Used by GameManager for audio volume control.
+		/// </summary>
+		public float GetSpawnProbabilityValue()
+		{
+			return GetCurrentSpawnProbability();
+		}
+		
+		/// <summary>
+		/// Gets the current spawn limit based on curve value.
+		/// When curve value is >= 1.0, limit is capped at 5.
+		/// </summary>
+		private int GetCurrentSpawnLimit()
+		{
+			float curveValue = GetCurrentSpawnProbability();
+			
+			if (curveValue >= 1.0f)
+			{
+				return 5; // Hard cap at 5 when at max pressure
+			}
+			
+			return maxActiveTickets;
 		}
 		
 		/// <summary>
@@ -363,47 +442,96 @@ namespace Expo.Core.Managers
 			courseCount = UnityEngine.Random.Range(1, 2); // 1, 2, or 3 courses
 			totalDishCount = UnityEngine.Random.Range(courseCount, 3); // At least 1 per course, max 4 total
 			DebugLogger.Log(DebugLogger.Category.TICKET, "Using default ticket generation: {courseCount} courses, {totalDishCount} dishes");
-		}			// Distribute dishes across courses
-			List<int> dishesPerCourse = DistributeDishesAcrossCourses(courseCount, totalDishCount);
-			
-			int dishIndex = 0;
-			for (int courseNum = 1; courseNum <= courseCount; courseNum++)
-			{
-				var course = new CourseData(courseNum);
-				int dishCountForCourse = dishesPerCourse[courseNum - 1];
-				
-				for (int i = 0; i < dishCountForCourse; i++)
-				{
-					var dishData = GetRandomDish();
-					var dishState = new DishState(dishData, GenerateDishInstanceId(ticketId, dishIndex));
-
-					// Add DishState instance (for firing from this ticket)
-					course.Dishes.Add(dishState);
-					ticket.Dishes.Add(dishState); // Keep backward compatibility
-
-					// REFACTORED: Expectations are no longer created here.
-					// TableManager creates them in TableOrderState when SeatPartyAtTable is called.
-					// This separates concerns: tickets own "what can be fired", tables own "what's needed".
-
-					EventBus.Publish(new DishAddedToTicketEvent
-					{
-						TicketId = ticketId,
-						DishInstanceId = dishState.DishInstanceId,
-						DishData = dishData,
-						DishState = dishState,
-						Station = dishData.station,
-						Timestamp = GameTime.Time
-					});
-
-					dishIndex++;
-				}
-
-			ticket.Courses.Add(course);
-			DebugLogger.Log(DebugLogger.Category.TICKET,
-				$"Course {courseNum} created with {dishCountForCourse} dish(es)");
 		}
+		
+		// SAFETY CHECK: If only first-course-only dishes are available, force single course
+		// This prevents breaking the rule that first-course-only dishes cannot appear in later courses
+		bool hasNonFirstCourseDishes = availableDishes.Any(d => !d.isFirstCourseOnly);
+		if (!hasNonFirstCourseDishes && courseCount > 1)
+		{
+			DebugLogger.LogWarning(DebugLogger.Category.TICKET_MANAGER, 
+				$"Only first-course-only dishes available! Forcing single course ticket instead of {courseCount} courses.");
+			courseCount = 1;
+			totalDishCount = Mathf.Min(totalDishCount, 4); // Cap at 4 dishes for single course
+		}
+		
+	// Distribute dishes across courses
+		List<int> dishesPerCourse = DistributeDishesAcrossCourses(courseCount, totalDishCount);
+		
+		// Track dishes used in previous courses to prevent repeats
+		HashSet<DishData> usedDishes = new HashSet<DishData>();
+		
+		int dishIndex = 0;
+	for (int courseNum = 1; courseNum <= courseCount; courseNum++)
+	{
+		var course = new CourseData(courseNum);
+		int dishCountForCourse = dishesPerCourse[courseNum - 1];
+		bool isFirstCourse = (courseNum == 1);
+		
+		// Check how many eligible dishes are available for this course
+		int availableUniqueDishes = GetAvailableDishCountForCourse(isFirstCourse, usedDishes);
+		
+		// If we don't have enough unique dishes, reduce the order size for this course
+		if (availableUniqueDishes < dishCountForCourse)
+		{
+			int originalCount = dishCountForCourse;
+			dishCountForCourse = availableUniqueDishes;
+			DebugLogger.Log(DebugLogger.Category.TICKET_MANAGER,
+				$"Course {courseNum}: Reduced dish count from {originalCount} to {dishCountForCourse} (not enough unique dishes available)");
+		}
+		
+		// Skip this course entirely if no dishes are available
+		if (dishCountForCourse == 0)
+		{
+			DebugLogger.Log(DebugLogger.Category.TICKET_MANAGER,
+				$"Course {courseNum}: Skipping course (no unique dishes available)");
+			continue;
+		}
+		
+		// Track which dish types are used in THIS course (allows duplicates within the course)
+		HashSet<DishData> dishTypesInThisCourse = new HashSet<DishData>();
+		
+		for (int i = 0; i < dishCountForCourse; i++)
+		{
+			// Get a dish appropriate for this course that hasn't been used in PREVIOUS courses
+			var dishData = GetRandomDishForCourse(isFirstCourse, usedDishes);
+			var dishState = new DishState(dishData, GenerateDishInstanceId(ticketId, dishIndex));
 
-		return ticket;
+			// Track this dish type for this course
+			dishTypesInThisCourse.Add(dishData);
+
+			// Add DishState instance (for firing from this ticket)
+			course.Dishes.Add(dishState);
+			ticket.Dishes.Add(dishState); // Keep backward compatibility
+
+			// REFACTORED: Expectations are no longer created here.
+			// TableManager creates them in TableOrderState when SeatPartyAtTable is called.
+			// This separates concerns: tickets own "what can be fired", tables own "what's needed".
+
+			EventBus.Publish(new DishAddedToTicketEvent
+			{
+				TicketId = ticketId,
+				DishInstanceId = dishState.DishInstanceId,
+				DishData = dishData,
+				DishState = dishState,
+				Station = dishData.station,
+				Timestamp = GameTime.Time
+			});
+
+			dishIndex++;
+		}
+		
+		// After the course is complete, mark all dish types from this course as used
+		// This prevents them from appearing in future courses
+		foreach (var dishType in dishTypesInThisCourse)
+		{
+			usedDishes.Add(dishType);
+		}
+		
+		ticket.Courses.Add(course);
+		DebugLogger.Log(DebugLogger.Category.TICKET,
+			$"Course {courseNum} created with {dishCountForCourse} dish(es)");
+	}		return ticket;
 	}		/// <summary>
 		/// Distributes dishes across courses ensuring each course has at least 1 dish.
 		/// </summary>
@@ -428,17 +556,73 @@ namespace Expo.Core.Managers
 			return distribution;
 		}
 
-		private DishData GetRandomDish()
+
+	private DishData GetRandomDish()
+	{
+		return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+	}
+	
+	/// <summary>
+	/// Gets the count of available unique dishes for a given course.
+	/// This is used to check if we need to reduce the order size.
+	/// </summary>
+	private int GetAvailableDishCountForCourse(bool isFirstCourse, HashSet<DishData> usedDishes)
+	{
+		if (isFirstCourse)
 		{
-			return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+			// First course can have ANY dish (that hasn't been used yet)
+			return availableDishes.Count(d => !usedDishes.Contains(d));
 		}
-		private int GenerateDishInstanceId(int ticketId, int index)
+		else
 		{
-			// Ensures uniqueness: e.g., ticket 3 → 3000, 3001, etc.
-			return ticketId * 1000 + index;
+			// Non-first courses can ONLY have non-first-course dishes (that haven't been used yet)
+			return availableDishes.Count(d => !d.isFirstCourseOnly && !usedDishes.Contains(d));
+		}
+	}
+	
+	/// <summary>
+	/// Gets a random dish appropriate for the given course.
+	/// For first course: can pick from ALL dishes (first-course-only AND non-first-course dishes)
+	/// For other courses: can ONLY pick from non-first-course dishes
+	/// Also excludes dishes that have been used in previous courses on this ticket.
+	/// NOTE: This assumes GetAvailableDishCountForCourse has been checked first to ensure dishes are available.
+	/// </summary>
+	private DishData GetRandomDishForCourse(bool isFirstCourse, HashSet<DishData> usedDishes)
+	{
+		List<DishData> eligibleDishes;
+		
+		if (isFirstCourse)
+		{
+			// First course can have ANY dish (that hasn't been used yet)
+			eligibleDishes = availableDishes.Where(d => !usedDishes.Contains(d)).ToList();
+		}
+		else
+		{
+			// Non-first courses can ONLY have non-first-course dishes (that haven't been used yet)
+			eligibleDishes = availableDishes
+				.Where(d => !d.isFirstCourseOnly && !usedDishes.Contains(d))
+				.ToList();
 		}
 		
-		/// <summary>
+		// This should never happen since we check availability before calling this method,
+		// but include safety fallback just in case
+		if (eligibleDishes.Count == 0)
+		{
+			DebugLogger.LogError(DebugLogger.Category.TICKET_MANAGER, 
+				"CRITICAL: GetRandomDishForCourse called but no eligible dishes available! " +
+				"This should have been caught by GetAvailableDishCountForCourse.");
+			// Emergency fallback: just return any available dish
+			return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+		}
+		
+		return eligibleDishes[UnityEngine.Random.Range(0, eligibleDishes.Count)];
+	}
+	
+	private int GenerateDishInstanceId(int ticketId, int index)
+	{
+		// Ensures uniqueness: e.g., ticket 3 → 3000, 3001, etc.
+		return ticketId * 1000 + index;
+	}		/// <summary>
 		/// Load all dishes from disk using ProgressionConfigLoader.
 		/// This replaces the manual Inspector configuration.
 		/// </summary>
