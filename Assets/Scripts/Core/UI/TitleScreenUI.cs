@@ -36,34 +36,6 @@ namespace Expo.UI
         [SerializeField] private string preShiftSceneName = "PreShiftScene";
         
         private PlayerSaveData _currentSaveData;
-
-        // How to play content
-        private const string HOW_TO_PLAY_CONTENT =
-            "<color=black>" +
-            "<color=white><size=24><b>How to Play - EXPO</b></size>\n\n" +
-            "You are EXPO who runs this shit.\n\n" +
-            "Don't serve cold food. Send food out on time. Don't fuck it up.\n\n" +
-            "</color>\n"+
-            "<color=red><b>FIRE DISHES</b></color>\n" +
-            "• Tickets appear showing what each table ordered\n" +
-            "• Click buttons to send dishes to cook\n" +
-            "• Each dish has a pickup time (how long it takes to cook)\n\n\n" +
-            "<color=red><b>RECEIVE DISHES</b></color>\n" +
-            "• Cooked dishes appear on the pass\n" +
-            "• Click the dish when a dish is ready to serve\n" +
-            "• Be quick - dishes die if left too long on the pass!\n\n\n" +
-            "<color=red><b>SEND DISHES</b></color>\n" +
-            "• Click any available table to send selected dishes to it\n" +
-            "• Complete all courses for each table to finish tickets\n\n\n" +
-            "<b>Speed Controls:</b>\n" +
-            "• Press '1' , '2', '3' for faster speeds\n\n" +
-            "<color=red><b>Tips:</b></color>\n" +
-            "Dishes should be sent together, per course\n"+
-            "• Watch the timers - dishes die if left too long\n" +
-            "• Recall pickup times - fire dishes strategically for each course\n" +
-            "• Keep an eye on multiple tables and their timing\n"+
-            "• Keep your cool. The worst thing that can happen is you ruin someone's life.\n" +
-            "</color>";
         
         private void Start()
         {
@@ -89,10 +61,6 @@ namespace Expo.UI
                 
             if (deleteSaveButton != null)
                 deleteSaveButton.onClick.AddListener(OnDeleteSaveClicked);
-            
-            // Setup how to play text
-            if (howToPlayText != null)
-                howToPlayText.text = HOW_TO_PLAY_CONTENT;
             
             // Start with main menu active
             ShowMainMenu();
