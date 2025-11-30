@@ -23,6 +23,11 @@ namespace Expo.UI
         [SerializeField] private GameObject menuPanel;
         [SerializeField] private Transform buttonContainer; // Parent with Grid Layout Group
 
+        [Header("Button Styling")]
+        [SerializeField] private Sprite buttonBackgroundSprite; // Custom sprite for table buttons
+        [SerializeField] private TMP_FontAsset buttonFont; // Custom font for table button text
+        [SerializeField] private int buttonFontSize = 48; // Font size for table numbers
+
         [Header("Manager References")]
         [SerializeField] private TableManager tableManager;
 
@@ -247,6 +252,12 @@ namespace Expo.UI
             Image buttonImage = buttonObj.AddComponent<Image>();
             buttonImage.color = Color.white;
             
+            // Apply custom sprite if available
+            if (buttonBackgroundSprite != null)
+            {
+                buttonImage.sprite = buttonBackgroundSprite;
+            }
+            
             // Add Button component and configure visual feedback
             Button button = buttonObj.AddComponent<Button>();
             button.targetGraphic = buttonImage;
@@ -276,6 +287,13 @@ namespace Expo.UI
             textComponent.alignment = TextAlignmentOptions.Center;
             textComponent.autoSizeTextContainer = true;
             textComponent.color = Color.black;
+            textComponent.fontSize = buttonFontSize;
+            
+            // Apply custom font if available
+            if (buttonFont != null)
+            {
+                textComponent.font = buttonFont;
+            }
             
             // Set RectTransform to fill parent
             RectTransform textRect = textComponent.GetComponent<RectTransform>();
