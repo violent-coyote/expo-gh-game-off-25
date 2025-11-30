@@ -2822,17 +2822,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e755aad5dfbd466986d9c49cf602562, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Core.Managers.TicketManager
-  availableDishes:
-  - {fileID: 11400000, guid: c3a4959627e1944748a585497dcd52c0, type: 2}
-  - {fileID: 11400000, guid: e53a99a0a4164456192e044a1f65c9f8, type: 2}
-  - {fileID: 11400000, guid: 2470ffebd1c024298ac10584450e11ac, type: 2}
-  - {fileID: 11400000, guid: 5a3223d82e9e544bcb55bd1fc093e91e, type: 2}
-  - {fileID: 11400000, guid: c22c02ed142ae44a0af79bf824f39eeb, type: 2}
+  spawnProbabilityCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.2
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.3071886
+      value: 0.97533166
+      inSlope: 0.70281774
+      outSlope: 0.70281774
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.46012577
+      value: 0.20959687
+      inSlope: -0.028224664
+      outSlope: -0.028224664
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.8111839
+      value: 0.395877
+      inSlope: -0.85823625
+      outSlope: -0.85823625
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.93449813
+      value: 0.21761209
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxActiveTickets: 5
   tableManager: {fileID: 1285406895}
   scoringManager: {fileID: 1285406894}
+  shiftTimerManager: {fileID: 1285406896}
   ticketUIPrefab: {fileID: 3463107928926319973, guid: 068754a7ee1fa4aa3849cfe35cadea6a, type: 3}
   ticketRailParent: {fileID: 121925508}
-  spawnLimit: 5
 --- !u!114 &1285406891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2925,7 +2971,7 @@ MonoBehaviour:
   totalTableCount: 5
   percent2Tops: 50
   percent4Tops: 50
-  seatCheckInterval: 12
+  tableCheckInterval: 2
   ticketManager: {fileID: 1285406890}
   shiftTimerManager: {fileID: 1285406896}
 --- !u!114 &1285406896

@@ -16,17 +16,28 @@ namespace Expo.Core.Managers
     /// <summary>
     /// Manages ticket creation, tracking, and completion.
     /// RESPONSIBILITIES:
-    /// - Spawns tickets with random dishes at intervals
+    /// - Spawns tickets probabilistically based on AnimationCurve (configurable difficulty curve)
     /// - Tracks active tickets and their dishes
     /// - Checks for ticket completion and removes finished tickets
     /// - Creates and destroys TicketUI instances
+    /// 
+    /// SPAWN SYSTEM:
+    /// - Uses AnimationCurve to control spawn probability over normalized shift time (0-1)
+    /// - Spawn probability determines likelihood of ticket creation when table is available
+    /// - Max active tickets adjusts based on curve: >= 1.0 = 5 max, otherwise uses maxActiveTickets
+    /// - TableManager checks for available tables at fixed intervals (tableCheckInterval)
+    /// - TicketManager evaluates spawn probability when table is found
+    /// 
     /// NOTE: Does NOT change dish states - only checks status for completion.
     /// </summary>
     public class TicketManager : CoreManager
     {
-        [Header("Config")]
-        [Tooltip("All dishes loaded from disk - filtered by player's pre-shift selection")]
-        [SerializeField] private List<DishData> availableDishes; // READ-ONLY: Populated from disk
+        [Header("Spawn Configuration")]
+        [Tooltip("Curve that controls spawn probability over time. X-axis = time (0-1 normalized shift), Y-axis = spawn chance (0-1). Higher values = more aggressive spawning.")]
+        [SerializeField] private AnimationCurve spawnProbabilityCurve = AnimationCurve.EaseInOut(0f, 0.2f, 1f, 0.8f);
+        
+        [Tooltip("Maximum number of active tickets allowed at once")]
+        [SerializeField] private int maxActiveTickets = 10;
         
         [Header("References")]
         [Tooltip("Reference to TableManager for assigning tables to tickets")]
@@ -34,6 +45,12 @@ namespace Expo.Core.Managers
         
         [Tooltip("Reference to ScoringManager for tracking course completion")]
         [SerializeField] private ScoringManager scoringManager;
+        
+        [Tooltip("Reference to ShiftTimerManager for normalized time")]
+        [SerializeField] private ShiftTimerManager shiftTimerManager;
+        
+        // Loaded dynamically from disk and filtered by player selection
+        [HideInInspector] private List<DishData> availableDishes;
 
 
         private readonly List<TicketData> _activeTickets = new();
@@ -171,34 +188,51 @@ namespace Expo.Core.Managers
 		}
 		
 		// TableManager now handles eating timers and course unlocking
-	}		// Spawn Limit (removed auto-spawn, now table-driven)
-		[SerializeField] private int spawnLimit = 10;
-		private int _currentTicketCount = 0;
+	}
 		
+		private int _currentTicketCount = 0;
 
 		protected override void Update()
 		{
-			// Ticket spawning is now handled by TableManager
+			// Ticket spawning is now handled by TableManager with probability checks
 			// This Update method can be used for other time-based logic if needed
 		}
 
 		/// <summary>
 		/// Called by TableManager when a table is ready for a new party.
-		/// Creates a ticket based on the table's party size recommendations.
+		/// Uses spawn probability curve to determine if ticket should spawn.
 		/// </summary>
-	public void SpawnTicketForTable(TableData table)
+		/// <returns>True if ticket was spawned, false otherwise</returns>
+	public bool TrySpawnTicketForTable(TableData table)
 	{
 		if (availableDishes == null || availableDishes.Count == 0)
 		{
 			DebugLogger.LogWarning(DebugLogger.Category.TICKET, "No available dishes to spawn.");
-			return;
+			return false;
 		}
 
-		if (_currentTicketCount >= spawnLimit)
+		// Get current spawn limit based on curve value
+		int currentSpawnLimit = GetCurrentSpawnLimit();
+		
+		if (_currentTicketCount >= currentSpawnLimit)
 		{
-			// DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn limit reached ({spawnLimit}), skipping table {table.TableNumber}");
-			return;
-		}			int ticketId = ++_ticketCounter;
+			DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn limit reached ({_currentTicketCount}/{currentSpawnLimit}), skipping table {table.TableNumber}");
+			return false;
+		}
+		
+		// Check spawn probability based on curve
+		float spawnProbability = GetCurrentSpawnProbability();
+		float roll = UnityEngine.Random.value;
+		
+		if (roll > spawnProbability)
+		{
+			DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn roll failed: {roll:F2} > {spawnProbability:F2}, skipping table {table.TableNumber}");
+			return false;
+		}
+		
+		DebugLogger.Log(DebugLogger.Category.TICKET, $"Spawn roll success: {roll:F2} <= {spawnProbability:F2}, spawning for table {table.TableNumber}");
+		
+		int ticketId = ++_ticketCounter;
 			
 			// Create ticket with table recommendations
 			var ticket = CreateTicket(ticketId, table);
@@ -240,6 +274,42 @@ namespace Expo.Core.Managers
 			var ticketUI = ui.GetComponent<TicketUI>();
 			ticketUI.Init(ticket, tableManager);
 			_ticketUIs[ticketId] = ticketUI;
+			
+			return true;
+		}
+		
+		/// <summary>
+		/// Gets the current spawn probability from the curve based on normalized shift time.
+		/// </summary>
+		private float GetCurrentSpawnProbability()
+		{
+			if (shiftTimerManager == null)
+			{
+				DebugLogger.LogWarning(DebugLogger.Category.TICKET, "ShiftTimerManager reference missing, using default spawn probability 0.5");
+				return 0.5f;
+			}
+			
+			// Get normalized time (0-1) from shift timer
+			float normalizedTime = shiftTimerManager.GetNormalizedShiftTime();
+			float probability = spawnProbabilityCurve.Evaluate(normalizedTime);
+			
+			return Mathf.Clamp01(probability);
+		}
+		
+		/// <summary>
+		/// Gets the current spawn limit based on curve value.
+		/// When curve value is >= 1.0, limit is capped at 5.
+		/// </summary>
+		private int GetCurrentSpawnLimit()
+		{
+			float curveValue = GetCurrentSpawnProbability();
+			
+			if (curveValue >= 1.0f)
+			{
+				return 5; // Hard cap at 5 when at max pressure
+			}
+			
+			return maxActiveTickets;
 		}
 		
 		/// <summary>

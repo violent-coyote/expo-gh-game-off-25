@@ -32,9 +32,9 @@ namespace Expo.Managers
         // Remaining % are 6-tops (larger parties/PDR)
         
         [Header("Seating Behavior")]
-        [Tooltip("Interval between checking for new parties to seat (seconds)")]
-        [SerializeField] private float seatCheckInterval = 3f;
-        private float _nextSeatCheckTime;
+        [Tooltip("How often to check for available tables (in seconds). TicketManager's spawn curve controls actual spawn probability.")]
+        [SerializeField] private float tableCheckInterval = 2f;
+        private float _nextTableCheckTime;
         
         [Header("Manager References")]
         [Tooltip("Reference to TicketManager")]
@@ -60,7 +60,7 @@ namespace Expo.Managers
             // Generate tables at runtime
             GenerateTables();
             
-            _nextSeatCheckTime = GameTime.Time;
+            _nextTableCheckTime = GameTime.Time;
             
             // Removed: DishAssignedToTableEvent subscription (would cause recursion)
             // AssignDishToTable is called directly and publishes the event itself
@@ -70,11 +70,11 @@ namespace Expo.Managers
         
         protected override void Update()
         {
-            // Check if any tables need to be seated
-            if (GameTime.Time >= _nextSeatCheckTime)
+            // Check if any tables are available and try to seat parties
+            if (GameTime.Time >= _nextTableCheckTime)
             {
                 CheckForNewSeating();
-                _nextSeatCheckTime = GameTime.Time + seatCheckInterval;
+                _nextTableCheckTime = GameTime.Time + tableCheckInterval;
             }
             
             // Update eating timers for all tables
@@ -94,14 +94,20 @@ namespace Expo.Managers
             var availableTable = _allTables.FirstOrDefault(t => !t.IsOccupied);
             if (availableTable == null)
             {
-                // Debug.Log("[TableManager] No available tables for new parties");
+                // No available tables
                 return;
             }
             
-            // Request ticket from TicketManager
+            // Try to spawn a ticket based on spawn probability curve
+            // TicketManager now controls spawn probability via AnimationCurve
             if (ticketManager != null)
             {
-                ticketManager.SpawnTicketForTable(availableTable);
+                bool spawned = ticketManager.TrySpawnTicketForTable(availableTable);
+                if (!spawned)
+                {
+                    DebugLogger.Log(DebugLogger.Category.TABLE_MANAGER, 
+                        $"Table {availableTable.TableNumber} available but spawn probability check failed");
+                }
             }
         }
         
