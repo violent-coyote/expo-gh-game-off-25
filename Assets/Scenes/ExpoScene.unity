@@ -2906,10 +2906,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d292f2409cc974f38bd15439bcff9e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Core.GameManager
-  expoBackgroundaudio: {fileID: 8300000, guid: a0f5ef60865c0473eb3d533a9bf843eb, type: 3}
+  expoBackgroundAudio: {fileID: 8300000, guid: a0f5ef60865c0473eb3d533a9bf843eb, type: 3}
   linkVolumeToSpawnCurve: 1
-  audioVolume: 0.7
-  minVolumeWhenLinked: 0.3
+  audioVolume: 0.8
+  minVolumeWhenLinked: 0.1
   enableTableLogs: 0
   enableTableManagerLogs: 0
   enableTableDebugLogs: 0

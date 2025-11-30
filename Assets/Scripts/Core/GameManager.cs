@@ -13,7 +13,7 @@ namespace Expo.Core
 
         [Header("Audio Settings")]
         [Tooltip("Background audio to play during the expo scene")]
-        [SerializeField] private AudioClip expoBackgroundaudio;
+        [SerializeField] private AudioClip expoBackgroundAudio;
         
         [Tooltip("Should the audio volume be controlled by the spawn probability curve?")]
         [SerializeField] private bool linkVolumeToSpawnCurve = false;
@@ -164,7 +164,7 @@ namespace Expo.Core
         /// </summary>
         public void StartBackgroundAudio()
         {
-            if (expoBackgroundaudio == null)
+            if (expoBackgroundAudio == null)
             {
                 DebugLogger.LogWarning(DebugLogger.Category.GENERAL, "No background audio clip assigned to GameManager");
                 return;
@@ -176,7 +176,7 @@ namespace Expo.Core
                 return;
             }
 
-            _audioSource.clip = expoBackgroundaudio;
+            _audioSource.clip = expoBackgroundAudio;
             _audioSource.Play();
             
             DebugLogger.Log(DebugLogger.Category.GENERAL, "Background audio started");
@@ -203,24 +203,6 @@ namespace Expo.Core
         {
             if (!linkVolumeToSpawnCurve || _audioSource == null || !_audioSource.isPlaying)
                 return;
-
-            // Try to find managers if not cached
-            if (_ticketManager == null)
-            {
-                _ticketManager = FindFirstObjectByType<Expo.Core.Managers.TicketManager>();
-            }
-
-            if (_shiftTimerManager == null)
-            {
-                _shiftTimerManager = FindFirstObjectByType<Expo.Managers.ShiftTimerManager>();
-            }
-
-            // If we can't find the managers, use default volume
-            if (_ticketManager == null)
-            {
-                _audioSource.volume = audioVolume;
-                return;
-            }
 
             // Get spawn probability from TicketManager's curve
             float spawnProbability = _ticketManager.GetSpawnProbabilityValue();
