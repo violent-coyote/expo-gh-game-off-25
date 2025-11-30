@@ -11,6 +11,10 @@ namespace Expo.Data
         public string slug;
         public string station;           // e.g., "Grill", "Pasta", "GardeManger"
 
+        [Header("Course Preference")]
+        [Tooltip("If true, this dish can ONLY appear in the first course (e.g., appetizers, salads). If false, can appear in any course.")]
+        public bool isFirstCourseOnly = false;
+
         [Header("Timing (seconds)")]
         public float pickupTime = 10f;   // ideal total time to prepare
         public float dieTime = 5f;       // how long dish lasts on pass

@@ -15,6 +15,7 @@ MonoBehaviour:
   dishName: Little Gem Salad
   slug: gem
   station: Garmo
+  isFirstCourseOnly: 1
   pickupTime: 4
   dieTime: 30
   icon: {fileID: 21300000, guid: 928772d7637bf48bfb6e07ee3bfb075b, type: 3}

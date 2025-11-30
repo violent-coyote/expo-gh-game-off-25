@@ -433,47 +433,96 @@ namespace Expo.Core.Managers
 			courseCount = UnityEngine.Random.Range(1, 2); // 1, 2, or 3 courses
 			totalDishCount = UnityEngine.Random.Range(courseCount, 3); // At least 1 per course, max 4 total
 			DebugLogger.Log(DebugLogger.Category.TICKET, "Using default ticket generation: {courseCount} courses, {totalDishCount} dishes");
-		}			// Distribute dishes across courses
-			List<int> dishesPerCourse = DistributeDishesAcrossCourses(courseCount, totalDishCount);
-			
-			int dishIndex = 0;
-			for (int courseNum = 1; courseNum <= courseCount; courseNum++)
-			{
-				var course = new CourseData(courseNum);
-				int dishCountForCourse = dishesPerCourse[courseNum - 1];
-				
-				for (int i = 0; i < dishCountForCourse; i++)
-				{
-					var dishData = GetRandomDish();
-					var dishState = new DishState(dishData, GenerateDishInstanceId(ticketId, dishIndex));
-
-					// Add DishState instance (for firing from this ticket)
-					course.Dishes.Add(dishState);
-					ticket.Dishes.Add(dishState); // Keep backward compatibility
-
-					// REFACTORED: Expectations are no longer created here.
-					// TableManager creates them in TableOrderState when SeatPartyAtTable is called.
-					// This separates concerns: tickets own "what can be fired", tables own "what's needed".
-
-					EventBus.Publish(new DishAddedToTicketEvent
-					{
-						TicketId = ticketId,
-						DishInstanceId = dishState.DishInstanceId,
-						DishData = dishData,
-						DishState = dishState,
-						Station = dishData.station,
-						Timestamp = GameTime.Time
-					});
-
-					dishIndex++;
-				}
-
-			ticket.Courses.Add(course);
-			DebugLogger.Log(DebugLogger.Category.TICKET,
-				$"Course {courseNum} created with {dishCountForCourse} dish(es)");
 		}
+		
+		// SAFETY CHECK: If only first-course-only dishes are available, force single course
+		// This prevents breaking the rule that first-course-only dishes cannot appear in later courses
+		bool hasNonFirstCourseDishes = availableDishes.Any(d => !d.isFirstCourseOnly);
+		if (!hasNonFirstCourseDishes && courseCount > 1)
+		{
+			DebugLogger.LogWarning(DebugLogger.Category.TICKET_MANAGER, 
+				$"Only first-course-only dishes available! Forcing single course ticket instead of {courseCount} courses.");
+			courseCount = 1;
+			totalDishCount = Mathf.Min(totalDishCount, 4); // Cap at 4 dishes for single course
+		}
+		
+	// Distribute dishes across courses
+		List<int> dishesPerCourse = DistributeDishesAcrossCourses(courseCount, totalDishCount);
+		
+		// Track dishes used in previous courses to prevent repeats
+		HashSet<DishData> usedDishes = new HashSet<DishData>();
+		
+		int dishIndex = 0;
+	for (int courseNum = 1; courseNum <= courseCount; courseNum++)
+	{
+		var course = new CourseData(courseNum);
+		int dishCountForCourse = dishesPerCourse[courseNum - 1];
+		bool isFirstCourse = (courseNum == 1);
+		
+		// Check how many eligible dishes are available for this course
+		int availableUniqueDishes = GetAvailableDishCountForCourse(isFirstCourse, usedDishes);
+		
+		// If we don't have enough unique dishes, reduce the order size for this course
+		if (availableUniqueDishes < dishCountForCourse)
+		{
+			int originalCount = dishCountForCourse;
+			dishCountForCourse = availableUniqueDishes;
+			DebugLogger.Log(DebugLogger.Category.TICKET_MANAGER,
+				$"Course {courseNum}: Reduced dish count from {originalCount} to {dishCountForCourse} (not enough unique dishes available)");
+		}
+		
+		// Skip this course entirely if no dishes are available
+		if (dishCountForCourse == 0)
+		{
+			DebugLogger.Log(DebugLogger.Category.TICKET_MANAGER,
+				$"Course {courseNum}: Skipping course (no unique dishes available)");
+			continue;
+		}
+		
+		// Track which dish types are used in THIS course (allows duplicates within the course)
+		HashSet<DishData> dishTypesInThisCourse = new HashSet<DishData>();
+		
+		for (int i = 0; i < dishCountForCourse; i++)
+		{
+			// Get a dish appropriate for this course that hasn't been used in PREVIOUS courses
+			var dishData = GetRandomDishForCourse(isFirstCourse, usedDishes);
+			var dishState = new DishState(dishData, GenerateDishInstanceId(ticketId, dishIndex));
 
-		return ticket;
+			// Track this dish type for this course
+			dishTypesInThisCourse.Add(dishData);
+
+			// Add DishState instance (for firing from this ticket)
+			course.Dishes.Add(dishState);
+			ticket.Dishes.Add(dishState); // Keep backward compatibility
+
+			// REFACTORED: Expectations are no longer created here.
+			// TableManager creates them in TableOrderState when SeatPartyAtTable is called.
+			// This separates concerns: tickets own "what can be fired", tables own "what's needed".
+
+			EventBus.Publish(new DishAddedToTicketEvent
+			{
+				TicketId = ticketId,
+				DishInstanceId = dishState.DishInstanceId,
+				DishData = dishData,
+				DishState = dishState,
+				Station = dishData.station,
+				Timestamp = GameTime.Time
+			});
+
+			dishIndex++;
+		}
+		
+		// After the course is complete, mark all dish types from this course as used
+		// This prevents them from appearing in future courses
+		foreach (var dishType in dishTypesInThisCourse)
+		{
+			usedDishes.Add(dishType);
+		}
+		
+		ticket.Courses.Add(course);
+		DebugLogger.Log(DebugLogger.Category.TICKET,
+			$"Course {courseNum} created with {dishCountForCourse} dish(es)");
+	}		return ticket;
 	}		/// <summary>
 		/// Distributes dishes across courses ensuring each course has at least 1 dish.
 		/// </summary>
@@ -498,17 +547,73 @@ namespace Expo.Core.Managers
 			return distribution;
 		}
 
-		private DishData GetRandomDish()
+
+	private DishData GetRandomDish()
+	{
+		return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+	}
+	
+	/// <summary>
+	/// Gets the count of available unique dishes for a given course.
+	/// This is used to check if we need to reduce the order size.
+	/// </summary>
+	private int GetAvailableDishCountForCourse(bool isFirstCourse, HashSet<DishData> usedDishes)
+	{
+		if (isFirstCourse)
 		{
-			return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+			// First course can have ANY dish (that hasn't been used yet)
+			return availableDishes.Count(d => !usedDishes.Contains(d));
 		}
-		private int GenerateDishInstanceId(int ticketId, int index)
+		else
 		{
-			// Ensures uniqueness: e.g., ticket 3 → 3000, 3001, etc.
-			return ticketId * 1000 + index;
+			// Non-first courses can ONLY have non-first-course dishes (that haven't been used yet)
+			return availableDishes.Count(d => !d.isFirstCourseOnly && !usedDishes.Contains(d));
+		}
+	}
+	
+	/// <summary>
+	/// Gets a random dish appropriate for the given course.
+	/// For first course: can pick from ALL dishes (first-course-only AND non-first-course dishes)
+	/// For other courses: can ONLY pick from non-first-course dishes
+	/// Also excludes dishes that have been used in previous courses on this ticket.
+	/// NOTE: This assumes GetAvailableDishCountForCourse has been checked first to ensure dishes are available.
+	/// </summary>
+	private DishData GetRandomDishForCourse(bool isFirstCourse, HashSet<DishData> usedDishes)
+	{
+		List<DishData> eligibleDishes;
+		
+		if (isFirstCourse)
+		{
+			// First course can have ANY dish (that hasn't been used yet)
+			eligibleDishes = availableDishes.Where(d => !usedDishes.Contains(d)).ToList();
+		}
+		else
+		{
+			// Non-first courses can ONLY have non-first-course dishes (that haven't been used yet)
+			eligibleDishes = availableDishes
+				.Where(d => !d.isFirstCourseOnly && !usedDishes.Contains(d))
+				.ToList();
 		}
 		
-		/// <summary>
+		// This should never happen since we check availability before calling this method,
+		// but include safety fallback just in case
+		if (eligibleDishes.Count == 0)
+		{
+			DebugLogger.LogError(DebugLogger.Category.TICKET_MANAGER, 
+				"CRITICAL: GetRandomDishForCourse called but no eligible dishes available! " +
+				"This should have been caught by GetAvailableDishCountForCourse.");
+			// Emergency fallback: just return any available dish
+			return availableDishes[UnityEngine.Random.Range(0, availableDishes.Count)];
+		}
+		
+		return eligibleDishes[UnityEngine.Random.Range(0, eligibleDishes.Count)];
+	}
+	
+	private int GenerateDishInstanceId(int ticketId, int index)
+	{
+		// Ensures uniqueness: e.g., ticket 3 → 3000, 3001, etc.
+		return ticketId * 1000 + index;
+	}		/// <summary>
 		/// Load all dishes from disk using ProgressionConfigLoader.
 		/// This replaces the manual Inspector configuration.
 		/// </summary>
