@@ -11,6 +11,23 @@ namespace Expo.Core
     {
         public static GameManager Instance { get; private set; }
 
+        [Header("Audio Settings")]
+        [Tooltip("Background audio to play during the expo scene")]
+        [SerializeField] private AudioClip expoBackgroundaudio;
+        
+        [Tooltip("Should the audio volume be controlled by the spawn probability curve?")]
+        [SerializeField] private bool linkVolumeToSpawnCurve = false;
+        
+        [Tooltip("Base volume for background audio (0-1). Used as max volume when linked to spawn curve.")]
+        [SerializeField] [Range(0f, 1f)] private float audioVolume = 0.7f;
+        
+        [Tooltip("Minimum volume when linked to spawn curve (0-1)")]
+        [SerializeField] [Range(0f, 1f)] private float minVolumeWhenLinked = 0.3f;
+
+        private AudioSource _audioSource;
+        private Expo.Managers.ShiftTimerManager _shiftTimerManager;
+        private Expo.Core.Managers.TicketManager _ticketManager;
+
         [Header("Debug Logger Settings")]
         [SerializeField] private bool enableTableLogs = true;
         [SerializeField] private bool enableTableManagerLogs = true;
@@ -41,6 +58,9 @@ namespace Expo.Core
             }
             Instance = this;
 
+            // Setup audio source
+            SetupAudioSource();
+
             // Initialize once
             Initialize();
         }
@@ -64,6 +84,9 @@ namespace Expo.Core
             EventBus.Clear();
 
             OnInitialize();
+
+            // Start background audio for expo scene
+            StartBackgroundAudio();
         }
 
         /// <summary>
@@ -94,6 +117,7 @@ namespace Expo.Core
         private void Update()
         {
             GameTime.Tick();
+            UpdateAudioVolumeBasedOnSpawnCurve();
             OnUpdate();
         }
 
@@ -101,6 +125,9 @@ namespace Expo.Core
         {
             if (!_initialized) return;
             _initialized = false;
+
+            // Stop background audio when leaving expo scene
+            StopBackgroundAudio();
 
             OnShutdown();
             EventBus.Clear();
@@ -112,5 +139,97 @@ namespace Expo.Core
         protected virtual void OnInitialize() { }
         protected virtual void OnUpdate() { }
         protected virtual void OnShutdown() { }
+
+        /// <summary>
+        /// Sets up the AudioSource component for background audio.
+        /// </summary>
+        private void SetupAudioSource()
+        {
+            // Get or add AudioSource component
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            // Configure AudioSource for background audio
+            _audioSource.playOnAwake = false;
+            _audioSource.loop = true;
+            _audioSource.volume = audioVolume;
+        }
+
+        /// <summary>
+        /// Starts playing the background audio if available.
+        /// Called when entering the expo scene.
+        /// </summary>
+        public void StartBackgroundAudio()
+        {
+            if (expoBackgroundaudio == null)
+            {
+                DebugLogger.LogWarning(DebugLogger.Category.GENERAL, "No background audio clip assigned to GameManager");
+                return;
+            }
+
+            if (_audioSource == null)
+            {
+                DebugLogger.LogError(DebugLogger.Category.GENERAL, "AudioSource not initialized in GameManager");
+                return;
+            }
+
+            _audioSource.clip = expoBackgroundaudio;
+            _audioSource.Play();
+            
+            DebugLogger.Log(DebugLogger.Category.GENERAL, "Background audio started");
+        }
+
+        /// <summary>
+        /// Stops playing the background audio.
+        /// Called when leaving the expo scene.
+        /// </summary>
+        public void StopBackgroundAudio()
+        {
+            if (_audioSource != null && _audioSource.isPlaying)
+            {
+                _audioSource.Stop();
+                DebugLogger.Log(DebugLogger.Category.GENERAL, "Background audio stopped");
+            }
+        }
+
+        /// <summary>
+        /// Updates the audio volume based on spawn probability curve if enabled.
+        /// Called during Update when linkVolumeToSpawnCurve is true.
+        /// </summary>
+        private void UpdateAudioVolumeBasedOnSpawnCurve()
+        {
+            if (!linkVolumeToSpawnCurve || _audioSource == null || !_audioSource.isPlaying)
+                return;
+
+            // Try to find managers if not cached
+            if (_ticketManager == null)
+            {
+                _ticketManager = FindFirstObjectByType<Expo.Core.Managers.TicketManager>();
+            }
+
+            if (_shiftTimerManager == null)
+            {
+                _shiftTimerManager = FindFirstObjectByType<Expo.Managers.ShiftTimerManager>();
+            }
+
+            // If we can't find the managers, use default volume
+            if (_ticketManager == null)
+            {
+                _audioSource.volume = audioVolume;
+                return;
+            }
+
+            // Get spawn probability from TicketManager's curve
+            float spawnProbability = _ticketManager.GetSpawnProbabilityValue();
+            
+            // Map spawn probability to volume range
+            float targetVolume = Mathf.Lerp(minVolumeWhenLinked, audioVolume, spawnProbability);
+            
+            // Smooth transition
+            _audioSource.volume = Mathf.Lerp(_audioSource.volume, targetVolume, Time.deltaTime * 2f);
+        }
     }
 }

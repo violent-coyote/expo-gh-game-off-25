@@ -295,6 +295,15 @@ namespace Expo.Core.Managers
 			
 			return Mathf.Clamp01(probability);
 		}
+
+		/// <summary>
+		/// Public accessor for spawn probability curve value.
+		/// Used by GameManager for audio volume control.
+		/// </summary>
+		public float GetSpawnProbabilityValue()
+		{
+			return GetCurrentSpawnProbability();
+		}
 		
 		/// <summary>
 		/// Gets the current spawn limit based on curve value.
