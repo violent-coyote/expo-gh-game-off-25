@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Tomato Crostini
   m_EditorClassIdentifier: Assembly-CSharp::Expo.Data.DishData
   dishName: Tomato Crostini
-  slug: TOM TOAST
+  slug: TOMATO
   station: Garmo
   isFirstCourseOnly: 1
   pickupTime: 5

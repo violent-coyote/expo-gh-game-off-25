@@ -270,6 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Expo.UI.TitleScreenUI
   mainMenuPanel: {fileID: 825735788}
+  title: {fileID: 614289769}
   playButton: {fileID: 1006839359}
   howToPlayButton: {fileID: 674370289}
   quitButton: {fileID: 586981515}
@@ -280,6 +281,11 @@ MonoBehaviour:
   saveStateText: {fileID: 555743865}
   deleteSaveButton: {fileID: 2062860488}
   preShiftSceneName: PreShiftScene
+  musicControllerPrefab: {fileID: 7961196805689927610, guid: 2b31d226f541940d383a3488a4d65ad2, type: 3}
+  titleScaleAmount: 1.03
+  titleScaleDuration: 0.22
+  panelScaleAmount: 1.01
+  panelScaleDuration: 1.8
 --- !u!1 &315867516
 GameObject:
   m_ObjectHideFlags: 0
@@ -2916,7 +2922,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
+  m_ChildAlignment: 7
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
