@@ -17,5 +17,5 @@ MonoBehaviour:
   station: Saute
   isFirstCourseOnly: 0
   pickupTime: 12
-  dieTime: 20
+  dieTime: 10
   icon: {fileID: 21300000, guid: a84b0230da0084d0481b36473e785143, type: 3}
