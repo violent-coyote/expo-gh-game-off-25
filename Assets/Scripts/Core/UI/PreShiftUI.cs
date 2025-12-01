@@ -162,8 +162,8 @@ namespace Expo.UI
             
             TextMeshProUGUI textComponent = textObj.AddComponent<TextMeshProUGUI>();
             textComponent.text = isUnlocked ? 
-                $"{dish.dishName}\n{dish.pickupTime}s pickup" : 
-                $"LOCKED {dish.dishName}\n{dish.pickupTime}s pickup";
+                $"{dish.dishName}\n{dish.pickupTime}m pickup" : 
+                $"LOCKED {dish.dishName}\n{dish.pickupTime}m pickup";
             textComponent.fontSize = 48;
             textComponent.color = Color.black;
             textComponent.alignment = TextAlignmentOptions.Left;
