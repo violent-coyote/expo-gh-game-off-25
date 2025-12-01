@@ -350,7 +350,7 @@ namespace Expo.UI
             
             _lastPulseIntensity = _currentPulseIntensity;
             
-            // Kill any existing animations
+            // Kill any existing animations smoothly
             if (_pulseSequence != null && _pulseSequence.IsActive())
             {
                 _pulseSequence.Kill();
@@ -360,61 +360,71 @@ namespace Expo.UI
                 _shakeSequence.Kill();
             }
             
-            // If no pulse needed, reset to original transform
+            // If no pulse needed, smoothly return to original transform
             if (_currentPulseIntensity <= 0.02f)
             {
-                transform.localScale = _originalScale;
-                transform.localRotation = _originalRotation;
+                // Use tween to smoothly return to rest state
+                transform.DOScale(_originalScale, 0.3f).SetEase(Ease.OutQuad);
+                transform.DORotate(Vector3.zero, 0.3f).SetEase(Ease.OutQuad);
                 return;
             }
             
-            // Calculate pulse parameters based on intensity
-            float pulseScale = 1f + (_currentPulseIntensity * 0.15f); // Max 15% scale increase
-            float pulseDuration = Mathf.Lerp(1.0f, 0.3f, _currentPulseIntensity); // Faster as intensity increases
-            float rotationAmount = Mathf.Lerp(2f, 5f, _currentPulseIntensity); // Rotation amount
-            float quarterDuration = pulseDuration * 0.25f; // Each rotation step
+            // Smoothly transition from current rotation to start of animation
+            // This prevents jarring jumps when animation intensity changes
+            float currentZ = transform.localEulerAngles.z;
+            if (currentZ > 180f) currentZ -= 360f; // Normalize to -180 to 180
             
-            // Create pulsing sequence with ping-pong rotation: left → center → right → center
+            // Start animation from center position for smooth entry
+            if (Mathf.Abs(currentZ) > 0.1f)
+            {
+                transform.DORotate(Vector3.zero, 0.2f).SetEase(Ease.OutQuad);
+            }
+            
+            // Calculate pulse parameters based on intensity
+            float pulseScale = 1f + (_currentPulseIntensity * 0.05f); // Max 5% scale increase (slightly increased)
+            float pulseDuration = Mathf.Lerp(1.8f, 0.8f, _currentPulseIntensity); // Moderate speed range
+            float rotationAmount = Mathf.Lerp(1f, 3f, _currentPulseIntensity); // Subtle rotation range
+            float halfDuration = pulseDuration * 0.5f; // Half cycle for each direction
+            
+            // Create smooth ping-pong animation: left → center → right → center (continuous loop)
             _pulseSequence = DOTween.Sequence();
             
-            // Pulse 1: Scale up + rotate left
-            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, quarterDuration).SetEase(Ease.OutQuad));
+            // Left → Center (scale up while rotating left, then return to center)
+            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, halfDuration * 0.5f).SetEase(Ease.InOutSine));
             _pulseSequence.Join(transform.DORotate(
                 new Vector3(0, 0, -rotationAmount), 
-                quarterDuration
-            ).SetEase(Ease.OutQuad));
+                halfDuration * 0.5f
+            ).SetEase(Ease.InOutSine));
             
-            // Return to center + scale down
-            _pulseSequence.Append(transform.DOScale(_originalScale, quarterDuration).SetEase(Ease.InQuad));
+            _pulseSequence.Append(transform.DOScale(_originalScale, halfDuration * 0.5f).SetEase(Ease.InOutSine));
             _pulseSequence.Join(transform.DORotate(
                 Vector3.zero, 
-                quarterDuration
-            ).SetEase(Ease.InQuad));
+                halfDuration * 0.5f
+            ).SetEase(Ease.InOutSine));
             
-            // Pulse 2: Scale up + rotate right
-            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, quarterDuration).SetEase(Ease.OutQuad));
+            // Right → Center (scale up while rotating right, then return to center)
+            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, halfDuration * 0.5f).SetEase(Ease.InOutSine));
             _pulseSequence.Join(transform.DORotate(
                 new Vector3(0, 0, rotationAmount), 
-                quarterDuration
-            ).SetEase(Ease.OutQuad));
+                halfDuration * 0.5f
+            ).SetEase(Ease.InOutSine));
             
-            // Return to center + scale down
-            _pulseSequence.Append(transform.DOScale(_originalScale, quarterDuration).SetEase(Ease.InQuad));
+            _pulseSequence.Append(transform.DOScale(_originalScale, halfDuration * 0.5f).SetEase(Ease.InOutSine));
             _pulseSequence.Join(transform.DORotate(
                 Vector3.zero, 
-                quarterDuration
-            ).SetEase(Ease.InQuad));
+                halfDuration * 0.5f
+            ).SetEase(Ease.InOutSine));
             
             _pulseSequence.SetLoops(-1); // Loop forever until killed
             
-            // Add shake when intensity is high (above 0.7)
-            if (_currentPulseIntensity > 0.7f)
+            // Add subtle shake when intensity is high (above 0.75)
+            if (_currentPulseIntensity > 0.75f)
             {
                 float shakeDuration = pulseDuration;
-                float shakeStrength = (_currentPulseIntensity - 0.7f) * 10f; // 0 to 3 units
+                float shakeStrength = (_currentPulseIntensity - 0.75f) * 3f; // 0 to 0.75 units (slightly increased)
                 
                 _shakeSequence = DOTween.Sequence();
-                _shakeSequence.Append(transform.DOShakePosition(shakeDuration, shakeStrength, 20, 90f, false, true));
+                _shakeSequence.Append(transform.DOShakePosition(shakeDuration, shakeStrength, 8, 80f, false, true)); // Smooth shake with lower vibrato
                 _shakeSequence.SetLoops(-1);
             }
             
