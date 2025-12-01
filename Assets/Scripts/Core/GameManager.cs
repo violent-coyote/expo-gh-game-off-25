@@ -204,6 +204,14 @@ namespace Expo.Core
             if (!linkVolumeToSpawnCurve || _audioSource == null || !_audioSource.isPlaying)
                 return;
 
+            // Initialize TicketManager reference if needed
+            if (_ticketManager == null)
+            {
+                _ticketManager = FindFirstObjectByType<Expo.Core.Managers.TicketManager>();
+                if (_ticketManager == null)
+                    return; // TicketManager not found in scene
+            }
+
             // Get spawn probability from TicketManager's curve
             float spawnProbability = _ticketManager.GetSpawnProbabilityValue();
             

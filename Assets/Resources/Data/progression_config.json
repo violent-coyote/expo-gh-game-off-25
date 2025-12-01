@@ -15,7 +15,7 @@
       "level": 1,
       "xpRequired": 0,
       "unlockedDishes": [
-        "Little Gem Salad",
+        "Little Gem Caesar",
         "Shrimp Mafaldine"
       ]
     },
@@ -23,7 +23,8 @@
       "level": 2,
       "xpRequired": 1,
       "unlockedDishes": [
-        "Bone In Ribeye"
+        "Bone In Ribeye",
+        "Braised Leeks"
       ]
     },
     {
