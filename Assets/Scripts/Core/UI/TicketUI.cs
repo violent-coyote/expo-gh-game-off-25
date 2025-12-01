@@ -32,8 +32,11 @@ namespace Expo.UI
         
         // Pulse animation tracking
         private Sequence _pulseSequence;
+        private Sequence _shakeSequence;
         private float _lastPulseIntensity = 0f;
+        private float _currentPulseIntensity = 0f;
         private Vector3 _originalScale;
+        private Quaternion _originalRotation;
 
         public void Init(TicketData data, Expo.Managers.TableManager tableManager)
         {
@@ -41,8 +44,9 @@ namespace Expo.UI
             _tableManager = tableManager;
             _tableNumber = data.AssignedTable?.TableNumber ?? 0;
             
-            // Store original scale for pulse animation
+            // Store original transform values for pulse animation
             _originalScale = transform.localScale;
+            _originalRotation = transform.localRotation;
             
             DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
                 $"Initializing TicketUI for Table {_tableNumber} (Ticket #{data.TicketId})");
@@ -274,10 +278,14 @@ namespace Expo.UI
         
         private void OnDestroy()
         {
-            // Kill any active pulse animation
+            // Kill any active animations
             if (_pulseSequence != null && _pulseSequence.IsActive())
             {
                 _pulseSequence.Kill();
+            }
+            if (_shakeSequence != null && _shakeSequence.IsActive())
+            {
+                _shakeSequence.Kill();
             }
             
             EventBus.Unsubscribe<DishesServedEvent>(OnDishesServed);
@@ -288,62 +296,130 @@ namespace Expo.UI
         /// <summary>
         /// Updates the pulse animation based on the ticket's timing data.
         /// Pulse starts at 50% time remaining and increases intensity linearly until 10% (maximum).
+        /// Features: smooth intensity transitions, ping-pong rotation, and shake when intense.
+        /// Stops entirely when table is eating.
         /// </summary>
         private void UpdatePulseAnimation()
         {
             // Check if timing data exists
             if (_ticketData?.TimingData == null)
+                return;
+            
+            // If table is eating, stop pulsing and return to normal
+            bool isEating = _ticketData.AssignedTable?.IsEating ?? false;
+            if (isEating)
             {
-                DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
-                    $"Table {_tableNumber}: No timing data available");
+                // Smoothly return to normal state
+                _currentPulseIntensity = Mathf.Lerp(_currentPulseIntensity, 0f, Time.deltaTime * 10f);
+                
+                if (_currentPulseIntensity < 0.01f)
+                {
+                    // Kill animations and reset transform
+                    if (_pulseSequence != null && _pulseSequence.IsActive())
+                        _pulseSequence.Kill();
+                    if (_shakeSequence != null && _shakeSequence.IsActive())
+                        _shakeSequence.Kill();
+                    
+                    transform.localScale = _originalScale;
+                    transform.localRotation = _originalRotation;
+                    _currentPulseIntensity = 0f;
+                    _lastPulseIntensity = 0f;
+                }
                 return;
             }
             
             // Get current pulse intensity from timing data
-            float currentIntensity = _ticketData.TimingData.GetPulseIntensity(GameTime.Time);
-            float normalizedTime = _ticketData.TimingData.GetNormalizedTimeRemaining(GameTime.Time);
+            float targetIntensity = _ticketData.TimingData.GetPulseIntensity(GameTime.Time);
             
-            // Debug log every few seconds
+            // Smoothly interpolate intensity to avoid janky transitions
+            _currentPulseIntensity = Mathf.Lerp(_currentPulseIntensity, targetIntensity, Time.deltaTime * 5f);
+            
+            // Debug log periodically
             if (Time.frameCount % 120 == 0) // Every ~2 seconds at 60fps
             {
+                float normalizedTime = _ticketData.TimingData.GetNormalizedTimeRemaining(GameTime.Time);
                 DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
-                    $"Table {_tableNumber}: Time remaining: {normalizedTime:F2} ({normalizedTime * 100:F0}%), Intensity: {currentIntensity:F2}");
+                    $"Table {_tableNumber}: Time: {normalizedTime * 100:F0}%, Target: {targetIntensity:F2}, Current: {_currentPulseIntensity:F2}, Eating: {isEating}");
             }
             
-            // If intensity hasn't changed significantly, don't update animation
-            if (Mathf.Approximately(currentIntensity, _lastPulseIntensity))
+            // Check if we need to update the animation (threshold to avoid constant restarts)
+            bool needsUpdate = Mathf.Abs(_currentPulseIntensity - _lastPulseIntensity) > 0.05f;
+            
+            if (!needsUpdate)
                 return;
             
-            _lastPulseIntensity = currentIntensity;
+            _lastPulseIntensity = _currentPulseIntensity;
             
-            // Kill any existing pulse sequence
+            // Kill any existing animations
             if (_pulseSequence != null && _pulseSequence.IsActive())
             {
                 _pulseSequence.Kill();
             }
+            if (_shakeSequence != null && _shakeSequence.IsActive())
+            {
+                _shakeSequence.Kill();
+            }
             
-            // If no pulse needed, reset to original scale
-            if (currentIntensity <= 0f)
+            // If no pulse needed, reset to original transform
+            if (_currentPulseIntensity <= 0.02f)
             {
                 transform.localScale = _originalScale;
+                transform.localRotation = _originalRotation;
                 return;
             }
             
             // Calculate pulse parameters based on intensity
-            // Intensity 0-1 maps to:
-            // - Scale: 1.0 to 1.15 (subtle to noticeable pulse)
-            // - Duration: 1.0s to 0.3s (slow to fast pulse)
-            float pulseScale = 1f + (currentIntensity * 0.15f); // Max 15% scale increase
-            float pulseDuration = Mathf.Lerp(1.0f, 0.3f, currentIntensity); // Faster as intensity increases
+            float pulseScale = 1f + (_currentPulseIntensity * 0.15f); // Max 15% scale increase
+            float pulseDuration = Mathf.Lerp(1.0f, 0.3f, _currentPulseIntensity); // Faster as intensity increases
+            float rotationAmount = Mathf.Lerp(2f, 5f, _currentPulseIntensity); // Rotation amount
+            float quarterDuration = pulseDuration * 0.25f; // Each rotation step
             
-            // Create pulsing sequence
+            // Create pulsing sequence with ping-pong rotation: left → center → right → center
             _pulseSequence = DOTween.Sequence();
-            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, pulseDuration * 0.5f).SetEase(Ease.InOutSine));
-            _pulseSequence.Append(transform.DOScale(_originalScale, pulseDuration * 0.5f).SetEase(Ease.InOutSine));
+            
+            // Pulse 1: Scale up + rotate left
+            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, quarterDuration).SetEase(Ease.OutQuad));
+            _pulseSequence.Join(transform.DORotate(
+                new Vector3(0, 0, -rotationAmount), 
+                quarterDuration
+            ).SetEase(Ease.OutQuad));
+            
+            // Return to center + scale down
+            _pulseSequence.Append(transform.DOScale(_originalScale, quarterDuration).SetEase(Ease.InQuad));
+            _pulseSequence.Join(transform.DORotate(
+                Vector3.zero, 
+                quarterDuration
+            ).SetEase(Ease.InQuad));
+            
+            // Pulse 2: Scale up + rotate right
+            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, quarterDuration).SetEase(Ease.OutQuad));
+            _pulseSequence.Join(transform.DORotate(
+                new Vector3(0, 0, rotationAmount), 
+                quarterDuration
+            ).SetEase(Ease.OutQuad));
+            
+            // Return to center + scale down
+            _pulseSequence.Append(transform.DOScale(_originalScale, quarterDuration).SetEase(Ease.InQuad));
+            _pulseSequence.Join(transform.DORotate(
+                Vector3.zero, 
+                quarterDuration
+            ).SetEase(Ease.InQuad));
+            
             _pulseSequence.SetLoops(-1); // Loop forever until killed
             
+            // Add shake when intensity is high (above 0.7)
+            if (_currentPulseIntensity > 0.7f)
+            {
+                float shakeDuration = pulseDuration;
+                float shakeStrength = (_currentPulseIntensity - 0.7f) * 10f; // 0 to 3 units
+                
+                _shakeSequence = DOTween.Sequence();
+                _shakeSequence.Append(transform.DOShakePosition(shakeDuration, shakeStrength, 20, 90f, false, true));
+                _shakeSequence.SetLoops(-1);
+            }
+            
             DebugLogger.Log(DebugLogger.Category.TICKET_UI,
-                $"Table {_tableNumber}: Pulse animation updated - Intensity: {currentIntensity:F2}, Scale: {pulseScale:F2}, Duration: {pulseDuration:F2}s");
+                $"Table {_tableNumber}: Pulse updated - Intensity: {_currentPulseIntensity:F2}, Scale: {pulseScale:F2}, Duration: {pulseDuration:F2}s, Shake: {_currentPulseIntensity > 0.7f}");
         }
         
         private void OnCourseUnlocked(CourseUnlockedEvent e)

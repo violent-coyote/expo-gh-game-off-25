@@ -138,11 +138,11 @@ namespace Expo.UI
             {
                 if (useRichText)
                 {
-                    report.AppendLine($"<color=#00FF00><b>🎉 LEVEL UP! {oldLevel} → {newLevel}</b></color>");
+                    report.AppendLine($"<color=#00FF00><b>LEVEL UP! {oldLevel} -> {newLevel}</b></color>");
                 }
                 else
                 {
-                    report.AppendLine($"LEVEL UP! {oldLevel} → {newLevel}");
+                    report.AppendLine($"LEVEL UP! {oldLevel} -> {newLevel}");
                 }
             }
             
@@ -197,6 +197,7 @@ namespace Expo.UI
                 var staggeredCourses = mistakes.FindAll(m => m.Type == MistakeType.StaggeredCourse);
                 var deadDishes = mistakes.FindAll(m => m.Type == MistakeType.DeadDish);
                 var wrongTableDishes = mistakes.FindAll(m => m.Type == MistakeType.WrongTable);
+                var overdueTickets = mistakes.FindAll(m => m.Type == MistakeType.TicketOverdue);
                 
                 // Staggered courses
                 if (staggeredCourses.Count > 0)
@@ -208,7 +209,7 @@ namespace Expo.UI
                     
                     foreach (var mistake in staggeredCourses)
                     {
-                        report.AppendLine($"  • {mistake.Description}");
+                        report.AppendLine($"  - {mistake.Description}");
                     }
                     report.AppendLine();
                 }
@@ -223,7 +224,7 @@ namespace Expo.UI
                     
                     foreach (var mistake in deadDishes)
                     {
-                        report.AppendLine($"  • {mistake.Description}");
+                        report.AppendLine($"  - {mistake.Description}");
                     }
                     report.AppendLine();
                 }
@@ -238,7 +239,22 @@ namespace Expo.UI
                     
                     foreach (var mistake in wrongTableDishes)
                     {
-                        report.AppendLine($"  • {mistake.Description}");
+                        report.AppendLine($"  - {mistake.Description}");
+                    }
+                    report.AppendLine();
+                }
+                
+                // Overdue tickets
+                if (overdueTickets.Count > 0)
+                {
+                    if (useRichText)
+                        report.AppendLine("<b>Late Tickets:</b>");
+                    else
+                        report.AppendLine("Late Tickets:");
+                    
+                    foreach (var mistake in overdueTickets)
+                    {
+                        report.AppendLine($"  - {mistake.Description}");
                     }
                     report.AppendLine();
                 }
