@@ -3,9 +3,6 @@ using System.IO;
 using UnityEngine;
 using Expo.Data;
 using Expo.Core.Debug;
-#if UNITY_WEBGL && !UNITY_EDITOR
-using System.Runtime.InteropServices;
-#endif
 
 namespace Expo.Core.Progression
 {
@@ -19,15 +16,6 @@ namespace Expo.Core.Progression
         private const string SAVE_FILE_NAME = "player_progress.json";
         private const string SAVE_KEY = "PlayerSaveData";
         private static string SavePath => Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")]
-        private static extern void SyncFiles();
-        
-        private static bool IsWebGL => true;
-#else
-        private static bool IsWebGL => false;
-#endif
         
         /// <summary>
         /// Save player data to persistent storage
