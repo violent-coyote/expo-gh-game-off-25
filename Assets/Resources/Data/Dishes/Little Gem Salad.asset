@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5e08d60f56f40e79af30c34edfa44c, type: 3}
   m_Name: Little Gem Salad
   m_EditorClassIdentifier: Assembly-CSharp::FireTheBoard.Data.DishData
-  dishName: Little Gem Salad
-  slug: gem
+  dishName: Little Gem Caesar
+  slug: CAESAR
   station: Garmo
   isFirstCourseOnly: 1
   pickupTime: 4
