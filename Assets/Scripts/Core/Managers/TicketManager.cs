@@ -120,6 +120,12 @@ namespace Expo.Core.Managers
 					DebugLogger.Log(DebugLogger.Category.TICKET,
 						$"Ticket #{ticket.TicketId} COMPLETED - table {ticket.AssignedTable.TableNumber} order fulfilled");
 
+					// Mark timing data as completed (stops pulse animation)
+					if (ticket.TimingData != null)
+					{
+						ticket.TimingData.IsCompleted = true;
+					}
+
 					// Check if any dishes were dead for progression tracking
 					bool hadDeadDishes = ticket.AnyDishDead();
 
@@ -192,13 +198,49 @@ namespace Expo.Core.Managers
 		
 		private int _currentTicketCount = 0;
 
-		protected override void Update()
+	protected override void Update()
+	{
+		// Check all active tickets for timing/overdue status
+		CheckTicketTimings();
+	}
+	
+	/// <summary>
+	/// Checks all active tickets for overdue status and triggers mistakes when needed.
+	/// Called every frame to monitor ticket timings.
+	/// </summary>
+	private void CheckTicketTimings()
+	{
+		float currentTime = GameTime.Time;
+		
+		foreach (var ticket in _activeTickets)
 		{
-			// Ticket spawning is now handled by TableManager with probability checks
-			// This Update method can be used for other time-based logic if needed
+			// Skip if no timing data (shouldn't happen, but safety check)
+			if (ticket.TimingData == null)
+				continue;
+			
+			// Check if ticket is overdue and mistake hasn't been triggered yet
+			if (ticket.TimingData.IsOverdue(currentTime) && !ticket.TimingData.OverdueMistakeTriggered)
+			{
+				// Mark as triggered to prevent duplicate mistakes
+				ticket.TimingData.OverdueMistakeTriggered = true;
+				
+				float elapsedTime = ticket.TimingData.GetElapsedTime(currentTime);
+				
+				DebugLogger.LogWarning(DebugLogger.Category.TICKET_MANAGER,
+					$"⚠️ MISTAKE: Ticket #{ticket.TicketId} for Table {ticket.AssignedTable?.TableNumber ?? 0} took longer than {ticket.TimingData.OptimalCompletionTime:F0} in-game minutes (optimal time)");
+				
+				// Publish ticket overdue event (ScoringManager will listen and create the mistake)
+				EventBus.Publish(new TicketOverdueEvent
+				{
+					TicketId = ticket.TicketId,
+					TableNumber = ticket.AssignedTable?.TableNumber,
+					OptimalTime = ticket.TimingData.OptimalCompletionTime,
+					ActualTime = elapsedTime,
+					Timestamp = currentTime
+				});
+			}
 		}
-
-		/// <summary>
+	}		/// <summary>
 		/// Called by TableManager when a table is ready for a new party.
 		/// Uses spawn probability curve to determine if ticket should spawn.
 		/// </summary>
@@ -531,7 +573,16 @@ namespace Expo.Core.Managers
 		ticket.Courses.Add(course);
 		DebugLogger.Log(DebugLogger.Category.TICKET,
 			$"Course {courseNum} created with {dishCountForCourse} dish(es)");
-	}		return ticket;
+	}
+	
+	// Initialize timing data for the ticket based on total dish count
+	int finalDishCount = ticket.TotalDishCount();
+	ticket.TimingData = new TicketTimingData(ticket.SpawnTime, finalDishCount);
+	
+	DebugLogger.Log(DebugLogger.Category.TICKET,
+		$"Ticket #{ticketId}: Initialized timing - {finalDishCount} dishes, optimal time: {ticket.TimingData.OptimalCompletionTime:F0} in-game minutes");
+	
+	return ticket;
 	}		/// <summary>
 		/// Distributes dishes across courses ensuring each course has at least 1 dish.
 		/// </summary>

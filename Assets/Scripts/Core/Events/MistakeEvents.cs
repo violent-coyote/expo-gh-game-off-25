@@ -10,7 +10,8 @@ namespace Expo.Core.Events
     {
         StaggeredCourse,  // Course dishes sent at different times (not in same send)
         DeadDish,         // Dish died on pass
-        WrongTable        // Dish sent to table with no expectation for it
+        WrongTable,       // Dish sent to table with no expectation for it
+        TicketOverdue     // Ticket took longer than optimal completion time
     }
 
     /// <summary>

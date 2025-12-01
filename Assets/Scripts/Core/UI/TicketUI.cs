@@ -8,6 +8,7 @@ using Expo.Core.Debug;
 using Expo.Core.Events;
 using Expo.Data;
 using Expo.Runtime;
+using DG.Tweening;
 
 namespace Expo.UI
 {
@@ -28,12 +29,20 @@ namespace Expo.UI
 
         private readonly Dictionary<int, GameObject> _dishRows = new(); // instanceId -> row GameObject
         private readonly Dictionary<int, TextMeshProUGUI> _dishTexts = new(); // instanceId -> text component
+        
+        // Pulse animation tracking
+        private Sequence _pulseSequence;
+        private float _lastPulseIntensity = 0f;
+        private Vector3 _originalScale;
 
         public void Init(TicketData data, Expo.Managers.TableManager tableManager)
         {
             _ticketData = data;
             _tableManager = tableManager;
             _tableNumber = data.AssignedTable?.TableNumber ?? 0;
+            
+            // Store original scale for pulse animation
+            _originalScale = transform.localScale;
             
             DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
                 $"Initializing TicketUI for Table {_tableNumber} (Ticket #{data.TicketId})");
@@ -257,11 +266,84 @@ namespace Expo.UI
             layoutElement.preferredHeight = 25;
         }
 
+        private void Update()
+        {
+            // Update pulse animation based on ticket timing
+            UpdatePulseAnimation();
+        }
+        
         private void OnDestroy()
         {
+            // Kill any active pulse animation
+            if (_pulseSequence != null && _pulseSequence.IsActive())
+            {
+                _pulseSequence.Kill();
+            }
+            
             EventBus.Unsubscribe<DishesServedEvent>(OnDishesServed);
             EventBus.Unsubscribe<DishAssignedToTableEvent>(OnDishAssignedToTable);
             EventBus.Unsubscribe<CourseUnlockedEvent>(OnCourseUnlocked);
+        }
+        
+        /// <summary>
+        /// Updates the pulse animation based on the ticket's timing data.
+        /// Pulse starts at 50% time remaining and increases intensity linearly until 10% (maximum).
+        /// </summary>
+        private void UpdatePulseAnimation()
+        {
+            // Check if timing data exists
+            if (_ticketData?.TimingData == null)
+            {
+                DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
+                    $"Table {_tableNumber}: No timing data available");
+                return;
+            }
+            
+            // Get current pulse intensity from timing data
+            float currentIntensity = _ticketData.TimingData.GetPulseIntensity(GameTime.Time);
+            float normalizedTime = _ticketData.TimingData.GetNormalizedTimeRemaining(GameTime.Time);
+            
+            // Debug log every few seconds
+            if (Time.frameCount % 120 == 0) // Every ~2 seconds at 60fps
+            {
+                DebugLogger.Log(DebugLogger.Category.TICKET_UI, 
+                    $"Table {_tableNumber}: Time remaining: {normalizedTime:F2} ({normalizedTime * 100:F0}%), Intensity: {currentIntensity:F2}");
+            }
+            
+            // If intensity hasn't changed significantly, don't update animation
+            if (Mathf.Approximately(currentIntensity, _lastPulseIntensity))
+                return;
+            
+            _lastPulseIntensity = currentIntensity;
+            
+            // Kill any existing pulse sequence
+            if (_pulseSequence != null && _pulseSequence.IsActive())
+            {
+                _pulseSequence.Kill();
+            }
+            
+            // If no pulse needed, reset to original scale
+            if (currentIntensity <= 0f)
+            {
+                transform.localScale = _originalScale;
+                return;
+            }
+            
+            // Calculate pulse parameters based on intensity
+            // Intensity 0-1 maps to:
+            // - Scale: 1.0 to 1.15 (subtle to noticeable pulse)
+            // - Duration: 1.0s to 0.3s (slow to fast pulse)
+            float pulseScale = 1f + (currentIntensity * 0.15f); // Max 15% scale increase
+            float pulseDuration = Mathf.Lerp(1.0f, 0.3f, currentIntensity); // Faster as intensity increases
+            
+            // Create pulsing sequence
+            _pulseSequence = DOTween.Sequence();
+            _pulseSequence.Append(transform.DOScale(_originalScale * pulseScale, pulseDuration * 0.5f).SetEase(Ease.InOutSine));
+            _pulseSequence.Append(transform.DOScale(_originalScale, pulseDuration * 0.5f).SetEase(Ease.InOutSine));
+            _pulseSequence.SetLoops(-1); // Loop forever until killed
+            
+            DebugLogger.Log(DebugLogger.Category.TICKET_UI,
+                $"Table {_tableNumber}: Pulse animation updated - Intensity: {currentIntensity:F2}, Scale: {pulseScale:F2}, Duration: {pulseDuration:F2}s");
         }
         
         private void OnCourseUnlocked(CourseUnlockedEvent e)

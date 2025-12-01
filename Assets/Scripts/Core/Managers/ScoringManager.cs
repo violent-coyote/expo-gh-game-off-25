@@ -51,6 +51,7 @@ namespace Expo.Managers
             EventBus.Subscribe<DishesServedEvent>(OnDishesServed);
             EventBus.Subscribe<TicketCreatedEvent>(OnTicketCreated);
             EventBus.Subscribe<DishDiedEvent>(OnDishDied);
+            EventBus.Subscribe<TicketOverdueEvent>(OnTicketOverdue);
             EventBus.Subscribe<AllTablesServedEvent>(OnAllTablesServed);
             
             _mistakesThisShift.Clear();
@@ -61,6 +62,7 @@ namespace Expo.Managers
             EventBus.Unsubscribe<DishesServedEvent>(OnDishesServed);
             EventBus.Unsubscribe<TicketCreatedEvent>(OnTicketCreated);
             EventBus.Unsubscribe<DishDiedEvent>(OnDishDied);
+            EventBus.Unsubscribe<TicketOverdueEvent>(OnTicketOverdue);
             EventBus.Unsubscribe<AllTablesServedEvent>(OnAllTablesServed);
             
             _dishServedTimes.Clear();
@@ -100,6 +102,27 @@ namespace Expo.Managers
                 DishData = e.DishData,
                 Timestamp = e.Timestamp,
                 Description = $"{e.DishData.dishName} died on pass"
+            };
+            
+            _mistakesThisShift.Add(mistake);
+            
+            DebugLogger.Log(DebugLogger.Category.MISTAKE, 
+                $"❌ MISTAKE: {mistake.Description}");
+            
+            // Trigger game feel feedback
+            PublishGameFeelEvent(mistake);
+        }
+        
+        private void OnTicketOverdue(TicketOverdueEvent e)
+        {
+            // Log a mistake when a ticket takes longer than optimal time
+            var mistake = new Mistake
+            {
+                Type = MistakeType.TicketOverdue,
+                TicketId = e.TicketId,
+                TableNumber = e.TableNumber,
+                Timestamp = e.Timestamp,
+                Description = $"Ticket #{e.TicketId} for Table {e.TableNumber ?? 0} exceeded optimal time ({e.OptimalTime:F0} in-game min)"
             };
             
             _mistakesThisShift.Add(mistake);

@@ -15,6 +15,9 @@ namespace Expo.Data
         
         // Time guests take to eat each course before next can be fired (in seconds)
         public float EatingTimePerCourse { get; set; } = 15f;
+        
+        // Timing data for tracking optimal completion time and pulse state
+        public TicketTimingData TimingData { get; set; }
 
         public TicketData(int ticketId, float spawnTime)
         {
